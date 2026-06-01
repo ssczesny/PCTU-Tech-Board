@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>10W ICU — Tech Board</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+  :root{
+    --bg:#eef1f4; --panel:#fff; --ink:#1b2a36; --ink-soft:#5c6e7c; --line:#d8dee4; --line-soft:#e7ebef;
+    --accent:#0b6b6f; --accent-ink:#063f42;
+    --done:#1f9d55; --done-bg:#e7f6ec; --done-line:#bfe6cc;
+    --occ:#b7791f;  --occ-bg:#fbf3e2;  --occ-line:#ecdab0;
+    --issue:#c0362c;--issue-bg:#fcebe9;--issue-line:#f2c5c0;
+    --over:#d4451c; --over-bg:#fdeee7;
+    --short:#9a5b00;
+    --pend-bg:#fff; --pend-line:#dbe2e8;
+    --shadow:0 1px 2px rgba(20,40,55,.06),0 6px 18px rgba(20,40,55,.07);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{background:radial-gradient(900px 500px at 100% -10%, #e3edee 0%, transparent 55%),var(--bg);color:var(--ink);
+    font-family:'IBM Plex Sans',system-ui,sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+  header{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,#0b6b6f,#0a5f63);color:#eafafa;box-shadow:0 4px 16px rgba(8,40,42,.22)}
+  .head-row{max-width:1240px;margin:0 auto;padding:12px 18px;display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .floor-tag{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;letter-spacing:.5px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:6px 9px;border-radius:9px;white-space:nowrap}
+  .brand h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.2px}
+  .brand .sub{font-size:12px;opacity:.82;margin-top:1px}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+  .field{display:flex;flex-direction:column;gap:2px}
+  .field label{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;opacity:.8}
+  .field input{font-family:inherit;font-size:13.5px;font-weight:500;color:var(--accent-ink);background:#fff;border:1px solid rgba(255,255,255,.4);border-radius:9px;padding:7px 10px;min-width:160px}
+  .field input::placeholder{color:#8aa3a4}
+  .name-warn input{outline:2px solid #ffd54a;outline-offset:1px}
+  .gear{width:38px;height:38px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.14);color:#eafafa;font-size:18px;cursor:pointer}
+  .gear:hover{background:rgba(255,255,255,.24)}
+
+  .progress{background:rgba(255,255,255,.10);border-top:1px solid rgba(255,255,255,.16)}
+  .progress-inner{max-width:1240px;margin:0 auto;padding:9px 18px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .chip{font-size:12.5px;font-weight:600;color:#eafafa;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:5px 11px;display:inline-flex;gap:7px;align-items:center}
+  .chip .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .chip b{font-family:'IBM Plex Mono',monospace}
+  .bar{flex:1;min-width:120px;height:9px;background:rgba(255,255,255,.18);border-radius:999px;overflow:hidden}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,#3ddc97,#1f9d55);transition:width .4s ease}
+
+  .banner{background:#fff7e6;border-bottom:1px solid #f0dca8;color:#7a5a00;font-size:12.5px;padding:9px 18px;text-align:center}
+
+  main{max-width:1240px;margin:0 auto;padding:16px 18px;display:grid;grid-template-columns:1fr 360px;gap:18px}
+  @media(max-width:960px){ main{grid-template-columns:1fr} }
+
+  .priorities{background:#fff;border:1px solid var(--over-bg);border-left:4px solid var(--over);border-radius:12px;padding:11px 14px;margin-bottom:14px;font-size:13px;box-shadow:var(--shadow)}
+  .priorities b{color:var(--over)}
+  .priorities .pblock{margin-right:18px;display:inline-block}
+  .priorities .none{color:var(--done);font-weight:600}
+
+  .legend{display:flex;flex-wrap:wrap;gap:13px;margin:0 2px 14px;font-size:12px;color:var(--ink-soft)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:12px;height:12px;border-radius:4px;display:inline-block;border:1px solid rgba(0,0,0,.08)}
+  .legend i.dash{border-style:dashed;border-color:var(--over)}
+
+  .zone{margin-bottom:20px}
+  .zone-head{display:flex;align-items:baseline;gap:10px;margin:2px 2px 10px}
+  .zone-head h2{font-size:14.5px;margin:0;font-weight:700;letter-spacing:.3px}
+  .zone-head .rng{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft)}
+  .zone-head .line{flex:1;height:1px;background:var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
+  .central .grid{grid-template-columns:repeat(auto-fill,minmax(172px,1fr))}
+
+  .room{position:relative;text-align:left;cursor:pointer;background:var(--pend-bg);border:1.5px solid var(--pend-line);border-radius:var(--radius);
+    padding:11px 12px 10px;min-height:94px;display:flex;flex-direction:column;gap:3px;box-shadow:var(--shadow);
+    transition:transform .08s,border-color .15s,background .15s;font-family:inherit}
+  .room:active{transform:scale(.975)}
+  .room .badges{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:1px;min-height:18px}
+  .badge{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:999px;color:#fff}
+  .room .rnum{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:23px;line-height:1;color:var(--ink)}
+  .central .room .rnum{font-size:14.5px;line-height:1.2;padding-right:22px}
+  .room .rmeta{font-size:11px;color:var(--ink-soft);margin-top:auto;line-height:1.3}
+  .room .rshort{font-size:11px;color:var(--short);font-weight:600;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .room.is-done{background:var(--done-bg);border-color:var(--done-line)}
+  .room.is-occupied{background:var(--occ-bg);border-color:var(--occ-line)}
+  .room.is-issue{background:var(--issue-bg);border-color:var(--issue-line)}
+  .room.is-overdue{background:var(--over-bg);border:1.5px dashed var(--over)}
+  .b-done{background:var(--done)} .b-occ{background:var(--occ)} .b-issue{background:var(--issue)} .b-over{background:var(--over)} .b-short{background:var(--short)}
+  .kebab{position:absolute;top:6px;right:6px;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--ink-soft);background:rgba(255,255,255,.55);border:1px solid var(--line-soft)}
+  .kebab:hover{background:#fff;color:var(--ink)}
+
+  .side{position:sticky;top:150px;align-self:start;display:flex;flex-direction:column;gap:14px}
+  @media(max-width:960px){ .side{position:static} }
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .card h3{font-size:13px;margin:0;padding:13px 15px;font-weight:700;letter-spacing:.3px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .actions{padding:12px 14px;display:flex;flex-direction:column;gap:9px}
+  .tally{font-size:12px;color:var(--ink-soft);padding:0 14px 12px;line-height:1.5}
+  .tally b{color:var(--ink);font-family:'IBM Plex Mono',monospace}
+  .btn{font-family:inherit;font-weight:600;font-size:13.5px;border-radius:10px;padding:11px 14px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);transition:.15s;text-align:center}
+  .btn:hover{border-color:#b9c4cd;background:#f7f9fb}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.primary:hover{background:#095a5e}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:7px 10px;font-size:12px;border-radius:8px}
+
+  .tabs{display:flex;border-bottom:1px solid var(--line-soft)}
+  .tabs button{flex:1;border:0;background:transparent;font-family:inherit;font-weight:600;font-size:12.5px;color:var(--ink-soft);padding:11px 6px;cursor:pointer;border-bottom:2.5px solid transparent}
+  .tabs button.active{color:var(--accent-ink);border-bottom-color:var(--accent)}
+  .pane{display:none}.pane.active{display:block}
+
+  .supply-compose{padding:12px 14px;border-bottom:1px solid var(--line-soft);display:flex;flex-direction:column;gap:8px}
+  .seg.light{display:inline-flex;background:#eef1f4;border:1px solid var(--line);border-radius:9px;padding:3px;align-self:flex-start}
+  .seg.light button{border:0;background:transparent;color:var(--ink-soft);font-family:inherit;font-weight:600;font-size:12px;padding:6px 11px;border-radius:7px;cursor:pointer}
+  .seg.light button.active{background:var(--accent);color:#fff}
+  .supply-compose input{font-family:inherit;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+  .feed{max-height:300px;overflow:auto}
+  .feed .empty{padding:20px 15px;text-align:center;color:var(--ink-soft);font-size:12.5px}
+  .feed .item{padding:11px 15px;border-bottom:1px solid var(--line-soft);font-size:12.5px;display:flex;gap:9px;align-items:flex-start}
+  .feed .item:last-child{border-bottom:0}
+  .feed .item.resolved{opacity:.5}
+  .tagpill{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:3px 7px;border-radius:6px;color:#fff;white-space:nowrap;margin-top:1px}
+  .t-short{background:var(--over)} .t-located{background:var(--accent)} .t-fyi{background:#5c6e7c}
+  .feed .item .body{flex:1;min-width:0}
+  .feed .item .meta{color:var(--ink-soft);font-size:11px;margin-top:2px}
+  .feed .item .x{color:var(--ink-soft);cursor:pointer;font-size:11px;font-weight:600;white-space:nowrap}
+  .feed .item .x:hover{color:var(--accent)}
+
+  .shortrow{padding:11px 15px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:10px;font-size:13px}
+  .shortrow:last-child{border-bottom:0}
+  .shortrow .n{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--over);background:var(--over-bg);border-radius:7px;padding:3px 8px;font-size:12px}
+  .shortrow .info{flex:1;min-width:0}
+  .shortrow .where{color:var(--ink-soft);font-size:11.5px;margin-top:1px}
+
+  .log{max-height:340px;overflow:auto}
+  .log .row{display:flex;gap:10px;padding:9px 15px;border-bottom:1px solid var(--line-soft);align-items:flex-start;font-size:12.5px}
+  .log .row:last-child{border-bottom:0}
+  .log .tag{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none}
+  .log .when{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);white-space:nowrap}
+  .log .what{flex:1;min-width:0}.log .what b{font-weight:600}.log .who{color:var(--ink-soft)}
+  .log .note-line{color:var(--short);font-weight:500;margin-top:2px}
+  .log .divider{padding:8px 15px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent-ink);background:#f1f7f7;border-bottom:1px solid var(--line-soft);text-align:center}
+  .log .empty,.handoffs .empty{padding:22px 15px;text-align:center;color:var(--ink-soft);font-size:12.5px}
+
+  .handoffs{max-height:360px;overflow:auto}
+  .ho{padding:12px 15px;border-bottom:1px solid var(--line-soft)}
+  .ho:last-child{border-bottom:0}
+  .ho .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .ho .sh{font-weight:700;font-size:13px}
+  .ho .tm{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft)}
+  .ho .stat{font-size:12px;color:var(--ink-soft);margin-top:3px}
+  .ho .stat b{color:var(--ink);font-family:'IBM Plex Mono',monospace}
+  .ho .ho-note{font-size:12.5px;margin-top:5px;background:#f7f9fb;border-radius:8px;padding:8px 10px}
+  .ho .by{font-size:11.5px;color:var(--ink-soft);margin-top:4px}
+
+  .backdrop{position:fixed;inset:0;background:rgba(15,30,40,.42);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:60;padding:18px}
+  .backdrop.open{display:flex}
+  .modal{background:#fff;border-radius:18px;width:100%;max-width:430px;max-height:90vh;overflow:auto;box-shadow:0 24px 60px rgba(10,30,40,.32);animation:pop .16s ease}
+  @keyframes pop{from{transform:translateY(10px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+  .m-head{padding:16px 18px 12px;border-bottom:1px solid var(--line-soft)}
+  .m-head .ttl{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:18px}
+  .m-head .sub{font-size:12px;color:var(--ink-soft);margin-top:2px}
+  .m-body{padding:14px 18px 16px;display:flex;flex-direction:column;gap:10px}
+  .opt{display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:11px;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);transition:.13s;text-align:left}
+  .opt:hover{background:#f7f9fb}
+  .opt .ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;flex:none}
+  .opt.done .ic{background:var(--done)} .opt.occ .ic{background:var(--occ)} .opt.issue .ic{background:var(--issue)} .opt.clear .ic{background:#7c8a96}
+  .opt small{display:block;font-weight:500;color:var(--ink-soft);font-size:11.5px;margin-top:1px}
+  .shorts-wrap{border:1px solid var(--line);border-radius:11px;padding:11px}
+  .shorts-wrap .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);font-weight:700;margin-bottom:8px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .ichip{font-size:12px;font-weight:600;border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:999px;padding:6px 11px;cursor:pointer;font-family:inherit}
+  .ichip.on{background:var(--over-bg);border-color:var(--over);color:var(--over)}
+  .add-short{display:flex;gap:6px;margin-top:9px}
+  .add-short input{flex:1;font-family:inherit;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+  textarea{font-family:inherit;font-size:13.5px;border:1.5px solid var(--line);border-radius:11px;padding:10px 12px;resize:vertical;min-height:64px;width:100%}
+  textarea:focus,input:focus{outline:none;border-color:var(--accent)}
+  .field-lite{display:flex;flex-direction:column;gap:5px}
+  .field-lite > span{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-soft);font-weight:600}
+  .field-lite input{font-family:inherit;font-size:14px;border:1.5px solid var(--line);border-radius:11px;padding:10px 12px}
+  .ho-summary{background:#f7f9fb;border:1px solid var(--line-soft);border-radius:11px;padding:12px 13px;font-size:13px}
+  .ho-summary .l{display:flex;justify-content:space-between;padding:3px 0}
+  .ho-summary b{font-family:'IBM Plex Mono',monospace}
+  .ho-summary .warn{color:var(--over)}
+  .m-foot{display:flex;gap:9px;padding:0 18px 18px}.m-foot .btn{flex:1}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;background:#10222c;color:#eafafa;padding:11px 18px;border-radius:999px;font-size:13.5px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:90;transition:.25s;pointer-events:none;max-width:88vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .foot-note{max-width:1240px;margin:0 auto;padding:2px 18px 28px;color:var(--ink-soft);font-size:11.5px;line-height:1.5}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <div class="brand">
+      <span class="floor-tag">10&nbsp;WEST</span>
+      <div><h1>ICU Tech Board</h1><div class="sub" id="shiftSub">Day · loading…</div></div>
+    </div>
+    <div class="controls">
+      <div class="field" id="nameField">
+        <label>Your name (PCT)</label>
+        <input id="nameInput" list="nameList" placeholder="Enter your name" autocomplete="off" spellcheck="false">
+        <datalist id="nameList"></datalist>
+      </div>
+      <button class="gear" id="settingsBtn" title="Settings">⚙</button>
+    </div>
+  </div>
+  <div class="progress"><div class="progress-inner" id="progress"></div></div>
+</header>
+
+<div id="banner"></div>
+
+<main>
+  <section id="board">
+    <div class="priorities" id="priorities"></div>
+    <div class="legend">
+      <span><i style="background:var(--pend-bg);border-color:var(--pend-line)"></i> To do this shift</span>
+      <span><i class="dash"></i> Overdue</span>
+      <span><i style="background:var(--done-bg);border-color:var(--done-line)"></i> Stocked</span>
+      <span><i style="background:var(--occ-bg);border-color:var(--occ-line)"></i> Occupied</span>
+      <span><i style="background:var(--issue-bg);border-color:var(--issue-line)"></i> Issue</span>
+      <span><i style="background:#fff;border-color:var(--short)"></i> Short item</span>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="card">
+      <h3>Shift &amp; handoff</h3>
+      <div class="actions">
+        <button class="btn primary" id="handoffBtn">Submit &amp; hand off →</button>
+        <button class="btn" id="exportBtn">Export activity (CSV)</button>
+        <button class="btn ghost" id="refreshBtn">Refresh board</button>
+      </div>
+      <div class="tally" id="tally"></div>
+    </div>
+    <div class="card">
+      <div class="tabs">
+        <button data-tab="supply" class="active">Supply board</button>
+        <button data-tab="activity">Activity</button>
+        <button data-tab="handoffs">Handoffs</button>
+      </div>
+      <div class="pane active" id="pane-supply">
+        <div class="supply-compose">
+          <div class="seg light" id="noteTag">
+            <button data-tag="short" class="active">Short</button>
+            <button data-tag="located">Located</button>
+            <button data-tag="fyi">Heads-up</button>
+          </div>
+          <input id="noteText" placeholder="e.g., 2 spare IV pumps now in Equipment Rm" autocomplete="off">
+          <button class="btn primary sm" id="notePost">Post to unit</button>
+        </div>
+        <div class="feed" id="supplyFeed"></div>
+      </div>
+      <div class="pane" id="pane-activity"><div class="log" id="log"></div></div>
+      <div class="pane" id="pane-handoffs"><div class="handoffs" id="handoffs"></div></div>
+    </div>
+  </aside>
+</main>
+
+<div class="foot-note" id="footNote"></div>
+
+<!-- Room modal -->
+<div class="backdrop" id="roomModal"><div class="modal">
+  <div class="m-head"><div class="ttl" id="mTitle">Room</div><div class="sub" id="mSub"></div></div>
+  <div class="m-body">
+    <button class="opt done" data-act="done"><span class="ic">✓</span><span>Mark stocked<small>Checked &amp; restocked to par</small></span></button>
+    <div class="shorts-wrap">
+      <div class="lbl">Short / couldn’t fill (optional)</div>
+      <div class="chips" id="shortChips"></div>
+      <div class="add-short"><input id="shortOther" placeholder="Add another item…" autocomplete="off"><button class="btn sm" id="shortAdd">Add</button></div>
+    </div>
+    <button class="opt occ" data-act="occupied"><span class="ic">⊘</span><span>Occupied — couldn’t access<small>Patient care / isolation / family present</small></span></button>
+    <button class="opt issue" data-act="issue"><span class="ic">⚑</span><span>Flag an issue<small>Broken / missing equipment</small></span></button>
+    <textarea id="mNote" placeholder="Optional note for issue or context"></textarea>
+    <button class="opt clear" data-act="clear"><span class="ic">↺</span><span>Clear status &amp; shorts<small>Reset this room</small></span></button>
+  </div>
+  <div class="m-foot"><button class="btn ghost" id="mCancel">Cancel</button></div>
+</div></div>
+
+<!-- Handoff modal -->
+<div class="backdrop" id="handoffModal"><div class="modal">
+  <div class="m-head"><div class="ttl">Submit shift &amp; hand off</div><div class="sub" id="hoSub"></div></div>
+  <div class="m-body">
+    <div class="ho-summary" id="hoSummary"></div>
+    <div class="field-lite"><span>Who worked this shift</span><input id="hoWho" placeholder="e.g., A. Smith, J. Lee" autocomplete="off"></div>
+    <div class="field-lite"><span>Handoff note for next shift</span><textarea id="hoNote" placeholder="e.g., East wing fully stocked. Pharmacy restock of 18g pending ~1500. 40 &amp; 41 occupied all shift."></textarea></div>
+    <div class="field-lite"><span>Next shift</span>
+      <div class="seg light" id="hoSeg"><button data-shift="Day">Day</button><button data-shift="Night">Night</button></div>
+    </div>
+    <div class="field-lite"><span>Next shift date</span><input type="date" id="hoDate"></div>
+  </div>
+  <div class="m-foot"><button class="btn ghost" id="hoCancel">Cancel</button><button class="btn primary" id="hoSubmit">Submit &amp; advance</button></div>
+</div></div>
+
+<!-- Settings modal -->
+<div class="backdrop" id="settingsModal"><div class="modal">
+  <div class="m-head"><div class="ttl">Settings</div><div class="sub">Tune the board to your unit. Saved for everyone.</div></div>
+  <div class="m-body">
+    <div class="field-lite"><span>Overdue timeout (hours since last check)</span><input type="number" id="setTimeout" min="1" max="48" step="1"></div>
+    <div class="field-lite"><span>Par items (one per line — used for shortage reporting)</span><textarea id="setPar" style="min-height:130px"></textarea></div>
+    <div class="field-lite"><span>Stock / soiled room names (one per line)</span><textarea id="setCentral" style="min-height:90px"></textarea></div>
+  </div>
+  <div class="m-foot"><button class="btn ghost" id="setCancel">Cancel</button><button class="btn primary" id="setSave">Save</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  const KEY="icu_10w_tech_board_v2", SHARED=true;
+  const ZONES=[
+    {title:"West Wing",range:"49–60",ids:[49,50,51,52,53,54,55,56,57,58,59,60].map(String)},
+    {title:"Center Corridor",range:"40–48",ids:[40,41,42,43,44,45,46,47,48].map(String)},
+    {title:"East Wing",range:"31–39",ids:[31,32,33,34,35,36,37,38,39].map(String)},
+  ];
+  const ROOM_IDS=ZONES.flatMap(z=>z.ids);
+  const CENTRAL_IDS=["c1","c2","c3","c4"];
+  const DEFAULT_CENTRAL=["Central Stock Room","Equipment Room","Soiled Utility — North","Soiled Utility — South"];
+  const DEFAULT_PAR=["IV start kits","IV catheters (assorted)","Saline flushes","IV tubing sets","Gloves – S","Gloves – M","Gloves – L","Isolation gowns","Gauze 4×4 / dressings","Tegaderm","Suction canisters","Suction tubing / Yankauer","ECG electrodes","CHG / alcohol swabs","Syringes (assorted)","Specimen cups","Emesis bags","Masks / PPE"];
+  const ALL_IDS=[...ROOM_IDS,...CENTRAL_IDS];
+
+  let me="", state=null, storageOK=true, modalOpen=false, saveChain=Promise.resolve(), activeLoc=null, activeTab="supply";
+  let shortSel=new Set(), noteTag="short";
+
+  const $=s=>document.querySelector(s);
+  const todayStr=()=>new Date().toISOString().slice(0,10);
+  const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+  function defaultState(){
+    const items={}; ALL_IDS.forEach(id=>items[id]={status:"pending",at:null,by:null,shiftKey:"",note:"",short:[]});
+    return {rev:Date.now(),config:{timeoutHours:8,par:DEFAULT_PAR.slice(),central:DEFAULT_CENTRAL.slice()},
+      shift:{name:"Day",date:todayStr(),startedAt:new Date().toISOString()},items,notes:[],log:[],handoffs:[]};
+  }
+  const shiftKeyOf=s=>s.shift.name+"|"+s.shift.date;
+  const shiftLabel=s=>s.shift.name+" · "+s.shift.date;
+  function nameOf(id){ const i=CENTRAL_IDS.indexOf(id); if(i>=0) return (state.config.central[i]||DEFAULT_CENTRAL[i]); return "Room "+id; }
+  function shortLabel(id){ const i=CENTRAL_IDS.indexOf(id); if(i>=0) return (state.config.central[i]||DEFAULT_CENTRAL[i]); return "Rm "+id; }
+
+  async function readStore(){ if(!window.storage) return null;
+    try{ const r=await window.storage.get(KEY,SHARED); if(!r||r.value==null) return null; return typeof r.value==="string"?JSON.parse(r.value):r.value; }catch(e){ return null; } }
+  async function writeStore(o){ if(!window.storage){storageOK=false;return;} try{ await window.storage.set(KEY,JSON.stringify(o),SHARED); storageOK=true; }catch(e){ storageOK=false; } }
+
+  function dedupeTrim(s){
+    const seenL=new Set(),L=[]; for(const e of s.log){ if(e.id&&seenL.has(e.id))continue; if(e.id)seenL.add(e.id); L.push(e);} L.sort((a,b)=>a.ts<b.ts?1:-1); s.log=L.slice(0,800);
+    const seenN=new Set(),N=[]; for(const e of s.notes){ if(e.id&&seenN.has(e.id))continue; if(e.id)seenN.add(e.id); N.push(e);} s.notes=N.slice(0,300);
+    const seenH=new Set(),H=[]; for(const e of s.handoffs){ if(e.id&&seenH.has(e.id))continue; if(e.id)seenH.add(e.id); H.push(e);} H.sort((a,b)=>a.ts<b.ts?1:-1); s.handoffs=H.slice(0,200);
+  }
+  function commit(mut){ mut(state); state.rev=Date.now(); render();
+    saveChain=saveChain.then(async()=>{ let latest=await readStore(); if(!latest) latest=JSON.parse(JSON.stringify(state));
+      mut(latest); latest.rev=Date.now(); dedupeTrim(latest); state=latest; await writeStore(state); render(); }).catch(()=>{});
+    return saveChain; }
+
+  function logE(locId,action,note){ return {id:uid(),ts:new Date().toISOString(),locId,locName:nameOf(locId),action,by:me||"—",shift:shiftLabel(state),note:note||""}; }
+
+  function applyStatus(locId,status,note,shorts){
+    if(!me){ flashName(); toast("Enter your name first ↑"); return; }
+    commit(s=>{ const it=s.items[locId]; if(!it)return;
+      if(status==="clear"){ it.status="pending"; it.short=[]; }
+      else{ it.status=status; it.at=new Date().toISOString(); it.by=me; it.shiftKey=shiftKeyOf(s);
+        if(status==="issue"||note) it.note=note||""; if(shorts) it.short=shorts.slice(); }
+      let n=note||""; if(status==="done"&&shorts&&shorts.length) n=(n?n+" — ":"")+"short: "+shorts.join(", ");
+      s.log.unshift(logE(locId,status,n)); });
+  }
+  function toggleDone(locId){ const it=state.items[locId]; const done=it&&it.status==="done"&&it.shiftKey===shiftKeyOf(state);
+    if(done) applyStatus(locId,"clear"); else applyStatus(locId,"done", "", []); }
+
+  function postNote(tag,text){ if(!me){flashName();toast("Enter your name first ↑");return;} if(!text.trim())return;
+    commit(s=>{ s.notes.unshift({id:uid(),ts:new Date().toISOString(),by:me,tag,text:text.trim(),resolved:false}); }); }
+  function resolveNote(id){ commit(s=>{ const n=s.notes.find(x=>x.id===id); if(n)n.resolved=!n.resolved; }); }
+  function restockItem(item){ commit(s=>{ ALL_IDS.forEach(id=>{ const it=s.items[id]; if(it&&it.short){ it.short=it.short.filter(x=>x!==item);} });
+    s.log.unshift(logE("—","restock","Restocked unit-wide: "+item)); }); }
+
+  function snapshot(s){
+    let done=0,occ=0,issue=0,over=0,pend=0; const unchecked=[];
+    ROOM_IDS.forEach(id=>{ const d=disp(id,s); if(d==="done")done++; else if(d==="occupied")occ++; else if(d==="issue"){issue++;unchecked.push(id);} else{ if(d==="overdue")over++; pend++; unchecked.push(id);} });
+    const shorts=shortAgg(s).length;
+    return {done,occ,issue,over,pend,total:ROOM_IDS.length,shorts,unchecked};
+  }
+  function doHandoff(who,note,nextName,nextDate){
+    commit(s=>{
+      const snap=snapshot(s);
+      s.handoffs.unshift({id:uid(),ts:new Date().toISOString(),shift:shiftLabel(s),by:who||me||"—",note:note||"",snapshot:snap});
+      s.log.unshift({id:uid(),ts:new Date().toISOString(),divider:true,text:"Handoff submitted — "+shiftLabel(s)+" — "+snap.done+"/"+snap.total+" stocked"+(who?(" · "+who):"")});
+      s.shift={name:nextName,date:nextDate,startedAt:new Date().toISOString()};
+      s.log.unshift({id:uid(),ts:new Date().toISOString(),divider:true,text:"Shift started — "+nextName+" · "+nextDate});
+    });
+  }
+
+  function disp(id,s){ s=s||state; const it=s.items[id]; if(!it)return "pending";
+    if(it.status==="issue") return "issue";
+    const cur=it.shiftKey===shiftKeyOf(s);
+    if(cur&&it.status==="done") return "done";
+    if(cur&&it.status==="occupied") return "occupied";
+    const stale = it.at ? (Date.now()-new Date(it.at)) : (Date.now()-new Date(s.shift.startedAt));
+    if(stale > (s.config.timeoutHours||8)*3600000) return "overdue";
+    return "pending"; }
+  function shortAgg(s){ s=s||state; const map={};
+    ALL_IDS.forEach(id=>{ const it=s.items[id]; if(it&&it.short) it.short.forEach(x=>{ (map[x]=map[x]||[]).push(shortLabel(id)); }); });
+    return Object.keys(map).map(item=>({item,where:map[item]})).sort((a,b)=>b.where.length-a.where.length); }
+
+  function ago(iso){ if(!iso)return null; const m=Math.max(0,Math.round((Date.now()-new Date(iso))/60000));
+    if(m<1)return"just now"; if(m<60)return m+"m ago"; const h=Math.floor(m/60); if(h<24)return h+"h ago"; return Math.floor(h/24)+"d ago"; }
+  function clk(iso){ return new Date(iso).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}); }
+  function fn(n){ if(!n||n==="—")return""; const p=n.trim().split(/\s+/); return p.length>1?(p[0][0]+". "+p.slice(1).join(" ")):p[0]; }
+  function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+  function render(){ if(!state)return; renderBanner(); renderProgress(); renderPriorities(); renderBoard(); renderTally();
+    renderSupply(); renderLog(); renderHandoffs(); $("#shiftSub").textContent=shiftLabel(state)+" · since "+clk(state.shift.startedAt); refreshNames(); }
+
+  function renderBanner(){ const b=$("#banner");
+    if(!window.storage){ b.className="banner"; b.textContent="Preview mode — open in Claude (not a downloaded copy) so entries save and sync."; }
+    else if(!storageOK){ b.className="banner"; b.textContent="Couldn’t reach storage on the last action — try Refresh."; }
+    else { b.className=""; b.textContent=""; } }
+
+  function counts(){ let done=0,occ=0,issue=0,over=0; ROOM_IDS.forEach(id=>{ const d=disp(id); if(d==="done")done++;else if(d==="occupied")occ++;else if(d==="issue")issue++;else if(d==="overdue")over++; });
+    return {done,occ,issue,over,due:ROOM_IDS.length-done-occ-issue-over,total:ROOM_IDS.length}; }
+  function renderProgress(){ const c=counts(),pct=Math.round(c.done/c.total*100),sh=shortAgg().length;
+    $("#progress").innerHTML=`
+      <span class="chip"><span class="dot" style="background:#3ddc97"></span>Stocked <b>${c.done}/${c.total}</b></span>
+      <span class="chip"><span class="dot" style="background:var(--over)"></span>Overdue <b>${c.over}</b></span>
+      <span class="chip"><span class="dot" style="background:var(--occ)"></span>Occupied <b>${c.occ}</b></span>
+      <span class="chip"><span class="dot" style="background:var(--issue)"></span>Issues <b>${c.issue}</b></span>
+      <span class="chip"><span class="dot" style="background:var(--short)"></span>Short items <b>${sh}</b></span>
+      <div class="bar"><i style="width:${pct}%"></i></div>`; }
+
+  function renderPriorities(){ const el=$("#priorities");
+    const over=ROOM_IDS.filter(id=>disp(id)==="overdue");
+    const issues=ROOM_IDS.filter(id=>disp(id)==="issue");
+    const sh=shortAgg();
+    if(!over.length&&!issues.length&&!sh.length){ el.innerHTML='<span class="none">✓ Nothing flagged — all rooms current, no open shortages or issues.</span>'; return; }
+    let h='<b>Priorities for this shift</b> &nbsp; ';
+    if(over.length) h+=`<span class="pblock"><b>${over.length} overdue:</b> ${over.join(", ")}</span>`;
+    if(issues.length) h+=`<span class="pblock"><b>${issues.length} open issue${issues.length>1?"s":""}:</b> ${issues.join(", ")}</span>`;
+    if(sh.length) h+=`<span class="pblock"><b>${sh.length} short item${sh.length>1?"s":""}</b> (see Supply board)</span>`;
+    el.innerHTML=h; }
+
+  function card(id,central){ const it=state.items[id],d=disp(id);
+    const cls=d==="done"?"is-done":d==="occupied"?"is-occupied":d==="issue"?"is-issue":d==="overdue"?"is-overdue":"";
+    let badges="";
+    if(d==="done")badges+='<span class="badge b-done">Stocked</span>';
+    else if(d==="occupied")badges+='<span class="badge b-occ">Occupied</span>';
+    else if(d==="issue")badges+='<span class="badge b-issue">Issue</span>';
+    else if(d==="overdue")badges+='<span class="badge b-over">Overdue</span>';
+    if(it&&it.short&&it.short.length) badges+=`<span class="badge b-short">${it.short.length} short</span>`;
+    let meta = (it&&it.at)?(ago(it.at)+(fn(it.by)?(" · "+fn(it.by)):"")):"Not checked yet";
+    const sh=(it&&it.short&&it.short.length)?`<span class="rshort">⚑ ${esc(it.short.slice(0,3).join(", "))}${it.short.length>3?"…":""}</span>`:"";
+    return `<button class="room ${cls}" data-id="${id}"><span class="kebab" data-menu="${id}">⋮</span>
+      <span class="badges">${badges}</span><span class="rnum">${central?esc(nameOf(id)):id}</span>${sh}<span class="rmeta">${meta}</span></button>`; }
+
+  function renderBoard(){ const b=$("#board"); [...b.querySelectorAll(".zone")].forEach(n=>n.remove());
+    ZONES.forEach(z=>{ const s=document.createElement("div"); s.className="zone";
+      s.innerHTML=`<div class="zone-head"><h2>${z.title}</h2><span class="rng mono">${z.range}</span><span class="line"></span></div><div class="grid">${z.ids.map(id=>card(id,false)).join("")}</div>`; b.appendChild(s); });
+    const c=document.createElement("div"); c.className="zone central";
+    c.innerHTML=`<div class="zone-head"><h2>Stock &amp; Soiled Rooms</h2><span class="line"></span></div><div class="grid">${CENTRAL_IDS.map(id=>card(id,true)).join("")}</div>`; b.appendChild(c); }
+
+  function renderTally(){ const key=shiftLabel(state); const by={};
+    state.log.forEach(e=>{ if(!e.divider&&e.shift===key&&e.action==="done"){ const n=e.by||"—"; by[n]=(by[n]||0)+1; } });
+    const parts=Object.keys(by).sort((a,b)=>by[b]-by[a]).map(n=>`${esc(n)} <b>${by[n]}</b>`);
+    $("#tally").innerHTML = "<b>This shift</b> ("+shiftLabel(state)+") — stocked by: " + (parts.length?parts.join(" · "):"<i>nobody yet</i>"); }
+
+  function aw(a){ return a==="done"?"stocked":a==="occupied"?"marked occupied":a==="issue"?"flagged issue at":a==="clear"?"cleared":a==="restock"?"":a; }
+  function renderLog(){ const box=$("#log"),L=state.log;
+    if(!L.length){ box.innerHTML='<div class="empty">No activity yet.</div>'; return; }
+    box.innerHTML=L.slice(0,120).map(e=>{ if(e.divider)return `<div class="divider">— ${esc(e.text)} —</div>`;
+      if(e.action==="restock")return `<div class="row"><span class="tag" style="background:var(--accent)"></span><div class="what">${esc(e.note)} <span class="who">· ${esc(e.by)}</span></div><span class="when">${clk(e.ts)}</span></div>`;
+      const col=e.action==="done"?"var(--done)":e.action==="occupied"?"var(--occ)":e.action==="issue"?"var(--issue)":"#9aa7b1";
+      const note=e.note?`<div class="note-line">${esc(e.note)}</div>`:"";
+      return `<div class="row"><span class="tag" style="background:${col}"></span><div class="what"><b>${esc(e.locName)}</b> ${aw(e.action)} <span class="who">· ${esc(e.by)}</span>${note}</div><span class="when">${clk(e.ts)}</span></div>`; }).join(""); }
+
+  function renderSupply(){ const f=$("#supplyFeed"); const sh=shortAgg(); const notes=state.notes;
+    let h="";
+    if(sh.length){ h+=sh.map(s=>`<div class="shortrow"><span class="n">${s.where.length}</span><div class="info"><div>${esc(s.item)}</div><div class="where">in ${esc(s.where.join(", "))}</div></div><span class="x" data-restock="${esc(s.item)}">Restocked ✓</span></div>`).join(""); }
+    if(notes.length){ h+=notes.map(n=>`<div class="item ${n.resolved?"resolved":""}"><span class="tagpill t-${n.tag}">${n.tag==="fyi"?"FYI":n.tag}</span><div class="body">${esc(n.text)}<div class="meta">${esc(n.by)} · ${clk(n.ts)}</div></div><span class="x" data-note="${n.id}">${n.resolved?"reopen":"resolve"}</span></div>`).join(""); }
+    f.innerHTML = h || '<div class="empty">No shortages reported and no notes yet. Report a short item from a room (⋮), or post a heads-up above.</div>'; }
+
+  function renderHandoffs(){ const box=$("#handoffs"),H=state.handoffs;
+    if(!H.length){ box.innerHTML='<div class="empty">No handoffs submitted yet. Use “Submit &amp; hand off” at end of shift.</div>'; return; }
+    box.innerHTML=H.slice(0,60).map(h=>{ const s=h.snapshot||{};
+      return `<div class="ho"><div class="top"><span class="sh">${esc(h.shift)}</span><span class="tm">${new Date(h.ts).toLocaleString([],{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span></div>
+        <div class="stat">Stocked <b>${s.done||0}/${s.total||30}</b> · occupied <b>${s.occ||0}</b> · issues <b>${s.issue||0}</b> · short <b>${s.shorts||0}</b>${(s.unchecked&&s.unchecked.length)?` · <span style="color:var(--over)">left: ${s.unchecked.join(", ")}</span>`:""}</div>
+        ${h.note?`<div class="ho-note">${esc(h.note)}</div>`:""}
+        <div class="by">Worked by ${esc(h.by||"—")}</div></div>`; }).join(""); }
+
+  function refreshNames(){ const names=[...new Set(state.log.filter(e=>e.by&&e.by!=="—").map(e=>e.by))].slice(0,40);
+    $("#nameList").innerHTML=names.map(n=>`<option value="${esc(n)}">`).join(""); }
+
+  let toastT=null; function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200); }
+  function flashName(){ const f=$("#nameField"); f.classList.add("name-warn"); $("#nameInput").focus(); setTimeout(()=>f.classList.remove("name-warn"),2500); }
+
+  function openRoom(id){ activeLoc=id; modalOpen=true; const it=state.items[id];
+    $("#mTitle").textContent = ROOM_IDS.includes(id)?("Room "+id):nameOf(id);
+    $("#mSub").textContent = (it&&it.at)?("Last: "+aw(it.status)+" "+ago(it.at)+" by "+(it.by||"—")+" ("+clk(it.at)+")"):"Not checked yet.";
+    $("#mNote").value=(it&&it.note)?it.note:"";
+    shortSel=new Set(it&&it.short?it.short:[]);
+    renderShortChips();
+    $("#roomModal").classList.add("open"); }
+  function renderShortChips(){ const par=state.config.par||[]; const extra=[...shortSel].filter(x=>!par.includes(x));
+    $("#shortChips").innerHTML=[...par,...extra].map(item=>`<button class="ichip ${shortSel.has(item)?"on":""}" data-item="${esc(item)}">${esc(item)}</button>`).join(""); }
+  function closeRoom(){ $("#roomModal").classList.remove("open"); modalOpen=false; activeLoc=null; }
+
+  function openHandoff(){ modalOpen=true; const s=snapshot(state);
+    $("#hoSub").textContent="Ending: "+shiftLabel(state);
+    $("#hoSummary").innerHTML=`<div class="l"><span>Stocked</span><b>${s.done}/${s.total}</b></div>
+      <div class="l"><span>Occupied</span><b>${s.occ}</b></div>
+      <div class="l ${s.over?"warn":""}"><span>Overdue</span><b>${s.over}</b></div>
+      <div class="l ${s.issue?"warn":""}"><span>Open issues</span><b>${s.issue}</b></div>
+      <div class="l ${s.shorts?"warn":""}"><span>Open short items</span><b>${s.shorts}</b></div>
+      ${s.unchecked.length?`<div class="l warn"><span>Not done this shift</span><b>${s.unchecked.join(", ")}</b></div>`:""}`;
+    $("#hoWho").value=me||"";
+    const next = state.shift.name==="Day" ? {n:"Night",d:state.shift.date} : {n:"Day",d:addDay(state.shift.date)};
+    document.querySelectorAll("#hoSeg button").forEach(b=>b.classList.toggle("active",b.dataset.shift===next.n));
+    $("#hoDate").value=next.d;
+    $("#handoffModal").classList.add("open"); }
+  function closeHandoff(){ $("#handoffModal").classList.remove("open"); modalOpen=false; }
+  function addDay(d){ const x=new Date(d+"T00:00:00"); x.setDate(x.getDate()+1); return x.toISOString().slice(0,10); }
+
+  function openSettings(){ modalOpen=true; $("#setTimeout").value=state.config.timeoutHours||8;
+    $("#setPar").value=(state.config.par||[]).join("\n"); $("#setCentral").value=(state.config.central||[]).join("\n");
+    $("#settingsModal").classList.add("open"); }
+  function closeSettings(){ $("#settingsModal").classList.remove("open"); modalOpen=false; }
+
+  function exportCSV(){ const rows=[["Timestamp","Shift","Location","Action","PCT","Note"]];
+    state.log.filter(e=>!e.divider).slice().reverse().forEach(e=>rows.push([new Date(e.ts).toLocaleString(),e.shift||"",e.locName||"",e.action==="restock"?"restock":aw(e.action),e.by||"",e.note||""]));
+    const csv=rows.map(r=>r.map(c=>{const v=String(c).replace(/"/g,'""');return /[",\n]/.test(v)?`"${v}"`:v;}).join(",")).join("\n");
+    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
+    a.download="10W_tech_board_"+todayStr()+".csv"; document.body.appendChild(a); a.click(); a.remove(); toast("CSV downloaded"); }
+
+  $("#board").addEventListener("click",e=>{ const k=e.target.closest(".kebab"); if(k){e.stopPropagation();openRoom(k.dataset.menu);return;}
+    const c=e.target.closest(".room"); if(c) toggleDone(c.dataset.id); });
+  $("#roomModal").addEventListener("click",e=>{ if(e.target===$("#roomModal")){closeRoom();return;}
+    const chip=e.target.closest(".ichip"); if(chip){ const it=chip.dataset.item; if(shortSel.has(it))shortSel.delete(it); else shortSel.add(it); renderShortChips(); return; }
+    const opt=e.target.closest(".opt"); if(opt){ const act=opt.dataset.act,note=$("#mNote").value.trim(),loc=activeLoc,shorts=[...shortSel]; closeRoom(); applyStatus(loc,act,note,shorts); } });
+  $("#shortAdd").addEventListener("click",()=>{ const v=$("#shortOther").value.trim(); if(v){shortSel.add(v);$("#shortOther").value="";renderShortChips();} });
+  $("#shortOther").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();$("#shortAdd").click();} });
+  $("#mCancel").addEventListener("click",closeRoom);
+
+  $("#supplyFeed").addEventListener("click",e=>{ const r=e.target.closest("[data-restock]"); if(r){restockItem(r.dataset.restock);toast("Marked restocked");return;}
+    const n=e.target.closest("[data-note]"); if(n) resolveNote(n.dataset.note); });
+  $("#noteTag").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; noteTag=b.dataset.tag; document.querySelectorAll("#noteTag button").forEach(x=>x.classList.remove("active")); b.classList.add("active"); });
+  $("#notePost").addEventListener("click",()=>{ postNote(noteTag,$("#noteText").value); $("#noteText").value=""; });
+  $("#noteText").addEventListener("keydown",e=>{ if(e.key==="Enter"){e.preventDefault();$("#notePost").click();} });
+
+  document.querySelector(".tabs").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; activeTab=b.dataset.tab;
+    document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active",x===b));
+    document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active",p.id==="pane-"+activeTab)); });
+
+  $("#handoffBtn").addEventListener("click",openHandoff);
+  $("#handoffModal").addEventListener("click",e=>{ if(e.target===$("#handoffModal"))closeHandoff(); });
+  $("#hoCancel").addEventListener("click",closeHandoff);
+  $("#hoSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; document.querySelectorAll("#hoSeg button").forEach(x=>x.classList.remove("active")); b.classList.add("active"); });
+  $("#hoSubmit").addEventListener("click",()=>{ const who=$("#hoWho").value.trim(); const note=$("#hoNote").value.trim();
+    const nn=document.querySelector("#hoSeg button.active").dataset.shift; const nd=$("#hoDate").value||todayStr();
+    closeHandoff(); doHandoff(who,note,nn,nd); toast("Shift handed off → "+nn+" · "+nd); });
+
+  $("#settingsBtn").addEventListener("click",openSettings);
+  $("#settingsModal").addEventListener("click",e=>{ if(e.target===$("#settingsModal"))closeSettings(); });
+  $("#setCancel").addEventListener("click",closeSettings);
+  $("#setSave").addEventListener("click",()=>{ const to=Math.max(1,parseInt($("#setTimeout").value)||8);
+    const par=$("#setPar").value.split("\n").map(s=>s.trim()).filter(Boolean);
+    const cen=$("#setCentral").value.split("\n").map(s=>s.trim()).filter(Boolean);
+    closeSettings(); commit(s=>{ s.config.timeoutHours=to; s.config.par=par.length?par:DEFAULT_PAR.slice(); for(let i=0;i<CENTRAL_IDS.length;i++) s.config.central[i]=cen[i]||DEFAULT_CENTRAL[i]; }); toast("Settings saved"); });
+
+  $("#nameInput").addEventListener("input",e=>{ me=e.target.value.trim(); });
+  $("#exportBtn").addEventListener("click",exportCSV);
+  $("#refreshBtn").addEventListener("click",async()=>{ const l=await readStore(); if(l){state=l;render();toast("Refreshed");} else renderBanner(); });
+
+  setInterval(async()=>{ if(modalOpen)return; const l=await readStore(); if(l&&l.rev!==state.rev){state=l;render();} else {renderBanner();renderBoard();renderProgress();renderPriorities();} },15000);
+
+  $("#footNote").innerHTML="Shared, live board — every entry is attributed to the name set up top. Working prototype for piloting the workflow; please don’t enter patient-identifiable information.";
+
+  (async function init(){ const ex=await readStore(); if(ex){ ex.config=ex.config||{}; ex.config.par=ex.config.par||DEFAULT_PAR.slice(); ex.config.central=ex.config.central||DEFAULT_CENTRAL.slice(); ex.config.timeoutHours=ex.config.timeoutHours||8; ex.notes=ex.notes||[]; ex.handoffs=ex.handoffs||[]; state=ex; } else { state=defaultState(); await writeStore(state); } render(); })();
+})();
+</script>
+</body>
+</html>
