@@ -7,19 +7,20 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
   :root{
-    --bg:#eef1f4; --panel:#fff; --ink:#1b2a36; --ink-soft:#5c6e7c; --line:#d8dee4; --line-soft:#e7ebef;
-    --accent:#0b6b6f; --accent-ink:#063f42;
-    --done:#1f9d55; --done-bg:#e7f6ec; --done-line:#bfe6cc;
-    --pend-bg:#fff; --pend-line:#dbe2e8;
+    --bg:#eef1f4;--panel:#fff;--ink:#1b2a36;--ink-soft:#5c6e7c;--line:#d8dee4;--line-soft:#e7ebef;
+    --accent:#0b6b6f;--accent-ink:#063f42;
+    --done:#1f9d55;--done-bg:#e7f6ec;--done-line:#bfe6cc;
+    --pend-bg:#fff;--pend-line:#dbe2e8;
     --shadow:0 1px 2px rgba(20,40,55,.06),0 6px 18px rgba(20,40,55,.07);
     --radius:14px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
-  body{background:radial-gradient(900px 500px at 100% -10%, #e3edee 0%, transparent 55%),var(--bg);color:var(--ink);
+  body{background:radial-gradient(900px 500px at 100% -10%,#e3edee 0%,transparent 55%),var(--bg);color:var(--ink);
     font-family:'IBM Plex Sans',system-ui,sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased}
   .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
 
+  /* ── header ── */
   header{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,#0b6b6f,#0a5f63);color:#eafafa;box-shadow:0 4px 16px rgba(8,40,42,.22)}
   .head-row{max-width:1240px;margin:0 auto;padding:12px 18px;display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;justify-content:space-between}
   .brand{display:flex;align-items:center;gap:12px;min-width:0}
@@ -38,12 +39,21 @@
   .chip .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
   .chip b{font-family:'IBM Plex Mono',monospace}
   .bar{flex:1;min-width:120px;height:9px;background:rgba(255,255,255,.18);border-radius:999px;overflow:hidden}
-  .bar > i{display:block;height:100%;background:linear-gradient(90deg,#3ddc97,#1f9d55);transition:width .4s ease}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,#3ddc97,#1f9d55);transition:width .4s ease}
 
-  .banner{background:#fff7e6;border-bottom:1px solid #f0dca8;color:#7a5a00;font-size:12.5px;padding:9px 18px;text-align:center}
+  /* ── setup banner ── */
+  .setup-banner{background:#fffbe6;border-bottom:2px solid #f0c94a;color:#5a4200;font-size:13px;padding:14px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;text-align:center}
+  .setup-banner a{color:var(--accent-ink);font-weight:600}
+  .setup-banner input{font-family:inherit;font-size:13px;border:1.5px solid #d4b34a;border-radius:9px;padding:7px 11px;min-width:340px;background:#fff}
+  .setup-banner input:focus{outline:none;border-color:var(--accent)}
+  .setup-banner button{font-family:inherit;font-weight:600;font-size:13px;border-radius:9px;padding:8px 16px;cursor:pointer;background:var(--accent);border:none;color:#fff}
+
+  /* ── status banner ── */
+  .banner{background:#fff7e6;border-bottom:1px solid #f0dca8;color:#7a5a00;font-size:12.5px;padding:9px 18px;text-align:center;display:none}
+  .banner.show{display:block}
 
   main{max-width:1240px;margin:0 auto;padding:16px 18px;display:grid;grid-template-columns:1fr 320px;gap:18px}
-  @media(max-width:960px){ main{grid-template-columns:1fr} }
+  @media(max-width:960px){main{grid-template-columns:1fr}}
 
   .legend{display:flex;flex-wrap:wrap;gap:13px;margin:0 2px 14px;font-size:12px;color:var(--ink-soft)}
   .legend span{display:inline-flex;align-items:center;gap:6px}
@@ -66,12 +76,13 @@
   .room .rmeta{font-size:11px;color:var(--ink-soft);margin-top:2px;line-height:1.3}
   .room.is-done{background:var(--done-bg);border-color:var(--done-line)}
   .room.is-done .rnum{color:var(--done)}
+  .room.saving{opacity:.6;pointer-events:none}
 
+  /* ── sidebar ── */
   .side{position:sticky;top:130px;align-self:start;display:flex;flex-direction:column;gap:14px}
-  @media(max-width:960px){ .side{position:static} }
+  @media(max-width:960px){.side{position:static}}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
   .card h3{font-size:13px;margin:0;padding:13px 15px;font-weight:700;letter-spacing:.3px;border-bottom:1px solid var(--line-soft)}
-
   .compose{padding:12px 14px;border-bottom:1px solid var(--line-soft);display:flex;flex-direction:column;gap:8px}
   .compose input{font-family:inherit;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:9px 11px}
   .compose input:focus{outline:none;border-color:var(--accent)}
@@ -84,15 +95,12 @@
   .feed .empty{padding:20px 15px;text-align:center;color:var(--ink-soft);font-size:12.5px}
   .note-item{padding:11px 15px;border-bottom:1px solid var(--line-soft);font-size:13px;display:flex;gap:9px;align-items:flex-start}
   .note-item:last-child{border-bottom:0}
-  .note-item.resolved{opacity:.45}
+  .note-item.resolved{opacity:.4}
   .note-body{flex:1;min-width:0;line-height:1.4}
   .note-meta{color:var(--ink-soft);font-size:11px;margin-top:3px}
   .note-x{color:var(--ink-soft);cursor:pointer;font-size:11px;font-weight:600;white-space:nowrap;padding:2px 0}
   .note-x:hover{color:var(--accent)}
   .sticky-dot{width:10px;height:10px;border-radius:50%;background:#f0c94a;flex:none;margin-top:4px}
-
-  .backdrop{position:fixed;inset:0;background:rgba(15,30,40,.42);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:60;padding:18px}
-  .backdrop.open{display:flex}
 
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;background:#10222c;color:#eafafa;padding:11px 18px;border-radius:999px;font-size:13.5px;font-weight:500;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:90;transition:.25s;pointer-events:none;max-width:88vw}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -116,7 +124,17 @@
   <div class="progress"><div class="progress-inner" id="progress"></div></div>
 </header>
 
-<div id="banner"></div>
+<!-- First-run setup banner -->
+<div id="setupBanner" class="setup-banner" style="display:none">
+  <div>
+    <b>One-time setup:</b> Paste your Google Apps Script Web App URL to connect to your Sheet.
+    <a href="https://developers.google.com/apps-script/guides/web" target="_blank" rel="noopener">How to deploy →</a>
+  </div>
+  <input id="scriptUrlInput" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+  <button id="scriptUrlSave">Connect</button>
+</div>
+
+<div id="banner" class="banner"></div>
 
 <main>
   <section id="board">
@@ -138,94 +156,130 @@
   </aside>
 </main>
 
-<div class="foot-note" id="footNote"></div>
-
+<div class="foot-note">Shared, live board — every entry is attributed to the name set up top. Do not enter patient-identifiable information.</div>
 <div class="toast" id="toast"></div>
 
 <script>
 (function(){
   "use strict";
-  const KEY="icu_10w_tech_board_v3", SHARED=true;
   const ZONES=[
     {title:"West Wing",  range:"49–60", ids:[49,50,51,52,53,54,55,56,57,58,59,60].map(String)},
     {title:"Center Corridor", range:"40–48", ids:[40,41,42,43,44,45,46,47,48].map(String)},
     {title:"East Wing",  range:"31–39", ids:[31,32,33,34,35,36,37,38,39].map(String)},
   ];
   const ROOM_IDS = ZONES.flatMap(z => z.ids);
+  const LS_URL  = "icu_board_script_url";
+  const LS_NAME = "icu_board_my_name";
+  const LS_CACHE= "icu_board_cache";
 
-  let me = "", state = null, storageOK = true, saveChain = Promise.resolve();
+  let scriptUrl = localStorage.getItem(LS_URL) || "";
+  let me = localStorage.getItem(LS_NAME) || "";
+  let state = { rooms: {}, notes: [] };
+  let pollTimer = null;
 
   const $ = s => document.querySelector(s);
-  const todayStr = () => new Date().toISOString().slice(0, 10);
-  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const todayStr = () => new Date().toISOString().slice(0,10);
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 
-  function defaultState(){
-    const rooms = {};
-    ROOM_IDS.forEach(id => rooms[id] = {stocked: false, at: null, by: null});
-    return {rev: Date.now(), rooms, notes: []};
+  // ── API ──────────────────────────────────────────────────────────────────
+
+  async function apiFetch(){
+    if(!scriptUrl) return null;
+    const r = await fetch(scriptUrl, {cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return r.json();
   }
 
-  async function readStore(){
-    if(!window.storage) return null;
-    try{ const r = await window.storage.get(KEY, SHARED); if(!r || r.value == null) return null; return typeof r.value === "string" ? JSON.parse(r.value) : r.value; }catch(e){ return null; }
-  }
-  async function writeStore(o){
-    if(!window.storage){ storageOK = false; return; }
-    try{ await window.storage.set(KEY, JSON.stringify(o), SHARED); storageOK = true; }catch(e){ storageOK = false; }
-  }
-
-  function commit(mut){
-    mut(state); state.rev = Date.now(); render();
-    saveChain = saveChain.then(async () => {
-      let latest = await readStore(); if(!latest) latest = JSON.parse(JSON.stringify(state));
-      mut(latest); latest.rev = Date.now();
-      if(latest.notes) latest.notes = latest.notes.slice(0, 200);
-      state = latest; await writeStore(state); render();
-    }).catch(() => {});
-    return saveChain;
-  }
-
-  function toggleRoom(id){
-    if(!me){ flashName(); toast("Enter your name first ↑"); return; }
-    commit(s => {
-      const r = s.rooms[id]; if(!r) return;
-      if(r.stocked){ r.stocked = false; r.at = null; r.by = null; }
-      else { r.stocked = true; r.at = new Date().toISOString(); r.by = me; }
+  async function apiPost(body){
+    if(!scriptUrl) return;
+    // Apps Script requires a no-cors-friendly workaround via no-cors mode for POST,
+    // but with "Execute as: Me, Anyone access" it should work with cors mode.
+    // We use a form-encoded approach to avoid preflight issues.
+    const r = await fetch(scriptUrl, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(body)
     });
+    return r.json();
   }
 
-  function postNote(text){
+  // ── State ────────────────────────────────────────────────────────────────
+
+  function applyRemote(data){
+    if(!data) return;
+    state.rooms = data.rooms || {};
+    state.notes = (data.notes || []).slice(0,200);
+    ROOM_IDS.forEach(id => { if(!state.rooms[id]) state.rooms[id] = {stocked:false,at:null,by:null}; });
+    localStorage.setItem(LS_CACHE, JSON.stringify(state));
+    render();
+  }
+
+  async function poll(){
+    try{
+      const data = await apiFetch();
+      applyRemote(data);
+      hideBanner();
+    } catch(e){
+      showBanner("Couldn't reach the Sheet — retrying…");
+    }
+  }
+
+  function schedulePoll(ms){ clearTimeout(pollTimer); pollTimer = setTimeout(poll, ms); }
+
+  // ── Actions ──────────────────────────────────────────────────────────────
+
+  async function toggleRoom(id){
+    if(!me){ flashName(); toast("Enter your name first ↑"); return; }
+    const room = state.rooms[id] || {};
+    const nowStocked = !room.stocked;
+
+    // Optimistic update
+    state.rooms[id] = { stocked: nowStocked, at: nowStocked ? new Date().toISOString() : null, by: nowStocked ? me : null };
+    render();
+
+    try{
+      await apiPost({ action:"setRoom", id, stocked: nowStocked, at: state.rooms[id].at, by: me });
+      schedulePoll(3000);
+    } catch(e){
+      showBanner("Save failed — check connection");
+      // Revert
+      state.rooms[id] = room; render();
+    }
+  }
+
+  async function postNote(text){
     if(!me){ flashName(); toast("Enter your name first ↑"); return; }
     if(!text.trim()) return;
-    commit(s => { s.notes = s.notes || []; s.notes.unshift({id: uid(), ts: new Date().toISOString(), by: me, text: text.trim(), resolved: false}); });
-  }
-  function resolveNote(id){
-    commit(s => { const n = (s.notes||[]).find(x => x.id === id); if(n) n.resolved = !n.resolved; });
+    const note = { id: uid(), ts: new Date().toISOString(), by: me, text: text.trim(), resolved: false };
+    state.notes.unshift(note);
+    render();
+    try{
+      await apiPost({ action:"postNote", ...note });
+      schedulePoll(3000);
+    } catch(e){
+      showBanner("Save failed — check connection");
+    }
   }
 
-  function ago(iso){
-    if(!iso) return null;
-    const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
-    if(m < 1) return "just now"; if(m < 60) return m + "m ago";
-    const h = Math.floor(m / 60); if(h < 24) return h + "h ago"; return Math.floor(h/24) + "d ago";
+  async function resolveNote(id){
+    const n = state.notes.find(x => x.id === id); if(!n) return;
+    n.resolved = !n.resolved;
+    render();
+    try{
+      await apiPost({ action:"resolveNote", id });
+      schedulePoll(3000);
+    } catch(e){
+      showBanner("Save failed — check connection");
+    }
   }
-  function clk(iso){ return new Date(iso).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}); }
-  function fn(n){ if(!n) return ""; const p = n.trim().split(/\s+/); return p.length > 1 ? (p[0][0] + ". " + p.slice(1).join(" ")) : p[0]; }
-  function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+  // ── Render ───────────────────────────────────────────────────────────────
 
   function render(){
-    if(!state) return;
-    renderBanner(); renderProgress(); renderBoard(); renderNotes();
+    renderProgress(); renderBoard(); renderNotes();
     const now = new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
-    $("#shiftSub").textContent = todayStr() + " · " + now;
+    $("#shiftSub").textContent = todayStr() + " · updated " + now;
     refreshNames();
-  }
-
-  function renderBanner(){
-    const b = $("#banner");
-    if(!window.storage){ b.className = "banner"; b.textContent = "Preview mode — open in Claude (not a downloaded copy) so entries save and sync."; }
-    else if(!storageOK){ b.className = "banner"; b.textContent = "Couldn't reach storage on the last action — try refreshing."; }
-    else { b.className = ""; b.textContent = ""; }
   }
 
   function renderProgress(){
@@ -237,11 +291,14 @@
       <div class="bar"><i style="width:${pct}%"></i></div>`;
   }
 
+  function clk(iso){ return iso ? new Date(iso).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}) : ""; }
+  function fn(n){ if(!n) return ""; const p = n.trim().split(/\s+/); return p.length > 1 ? (p[0][0]+". "+p.slice(1).join(" ")) : p[0]; }
+  function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
   function roomCard(id){
     const r = state.rooms[id] || {};
     const cls = r.stocked ? "is-done" : "";
-    let meta = "";
-    if(r.stocked && r.at) meta = clk(r.at) + (fn(r.by) ? " · " + fn(r.by) : "");
+    const meta = r.stocked && r.at ? (clk(r.at) + (fn(r.by) ? " · "+fn(r.by) : "")) : "";
     return `<button class="room ${cls}" data-id="${id}">
       <span class="badge">Stocked</span>
       <span class="rnum">${id}</span>
@@ -264,48 +321,86 @@
     const notes = state.notes || [];
     if(!notes.length){ f.innerHTML = '<div class="empty">No notes yet. Post a heads-up above.</div>'; return; }
     f.innerHTML = notes.map(n => `
-      <div class="note-item ${n.resolved ? "resolved" : ""}">
+      <div class="note-item ${n.resolved?"resolved":""}">
         <span class="sticky-dot"></span>
         <div class="note-body">${esc(n.text)}<div class="note-meta">${esc(n.by)} · ${clk(n.ts)}</div></div>
-        <span class="note-x" data-note="${n.id}">${n.resolved ? "reopen" : "done"}</span>
+        <span class="note-x" data-note="${n.id}">${n.resolved?"reopen":"done"}</span>
       </div>`).join("");
   }
 
   function refreshNames(){
-    const names = [...new Set((state.notes || []).filter(n => n.by).map(n => n.by))].slice(0, 40);
-    const fromRooms = [...new Set(ROOM_IDS.map(id => state.rooms[id]?.by).filter(Boolean))];
-    const all = [...new Set([...names, ...fromRooms])].slice(0, 40);
+    const from = [
+      ...state.notes.map(n => n.by),
+      ...ROOM_IDS.map(id => state.rooms[id]?.by)
+    ].filter(Boolean);
+    const all = [...new Set(from)].slice(0,40);
     $("#nameList").innerHTML = all.map(n => `<option value="${esc(n)}">`).join("");
   }
 
-  let toastT = null;
-  function toast(m){ const t = $("#toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2200); }
-  function flashName(){ const f = $("#nameField"); f.classList.add("name-warn"); $("#nameInput").focus(); setTimeout(() => f.classList.remove("name-warn"), 2500); }
+  // ── Banners ──────────────────────────────────────────────────────────────
+
+  function showBanner(msg){ const b = $("#banner"); b.textContent = msg; b.classList.add("show"); }
+  function hideBanner(){ $("#banner").classList.remove("show"); }
+
+  // ── Setup URL ────────────────────────────────────────────────────────────
+
+  function checkSetup(){
+    if(!scriptUrl){
+      $("#setupBanner").style.display = "";
+    } else {
+      $("#setupBanner").style.display = "none";
+    }
+  }
+
+  $("#scriptUrlSave").addEventListener("click", () => {
+    const v = $("#scriptUrlInput").value.trim();
+    if(!v.startsWith("https://script.google.com")){ toast("That doesn't look like a valid Apps Script URL"); return; }
+    scriptUrl = v;
+    localStorage.setItem(LS_URL, scriptUrl);
+    $("#setupBanner").style.display = "none";
+    toast("Connected — loading…");
+    poll();
+    startPolling();
+  });
+
+  // ── Events ───────────────────────────────────────────────────────────────
 
   $("#board").addEventListener("click", e => {
     const r = e.target.closest(".room"); if(r) toggleRoom(r.dataset.id);
   });
-
   $("#noteFeed").addEventListener("click", e => {
     const n = e.target.closest("[data-note]"); if(n) resolveNote(n.dataset.note);
   });
+  $("#notePost").addEventListener("click", () => { const v = $("#noteText").value; postNote(v); $("#noteText").value = ""; });
+  $("#noteText").addEventListener("keydown", e => { if(e.key==="Enter"){ e.preventDefault(); $("#notePost").click(); } });
+  $("#nameInput").addEventListener("input", e => { me = e.target.value.trim(); localStorage.setItem(LS_NAME, me); });
 
-  $("#notePost").addEventListener("click", () => { postNote($("#noteText").value); $("#noteText").value = ""; });
-  $("#noteText").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); $("#notePost").click(); } });
-  $("#nameInput").addEventListener("input", e => { me = e.target.value.trim(); });
+  let toastT = null;
+  function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2400); }
+  function flashName(){ const f=$("#nameField"); f.classList.add("name-warn"); $("#nameInput").focus(); setTimeout(()=>f.classList.remove("name-warn"),2500); }
 
-  setInterval(async () => {
-    const l = await readStore(); if(l && l.rev !== state.rev){ state = l; render(); } else { renderBanner(); renderProgress(); }
-  }, 15000);
+  // ── Init ─────────────────────────────────────────────────────────────────
 
-  $("#footNote").innerHTML = "Shared, live board — every entry is attributed to the name set up top. Working prototype; please don't enter patient-identifiable information.";
+  function startPolling(){ setInterval(poll, 20000); }
 
-  (async function init(){
-    const ex = await readStore();
-    if(ex){ ex.rooms = ex.rooms || {}; ex.notes = ex.notes || []; ROOM_IDS.forEach(id => { if(!ex.rooms[id]) ex.rooms[id] = {stocked:false,at:null,by:null}; }); state = ex; }
-    else { state = defaultState(); await writeStore(state); }
-    render();
-  })();
+  function init(){
+    // Restore name
+    if(me) $("#nameInput").value = me;
+
+    // Show cached data immediately while we fetch
+    const cached = localStorage.getItem(LS_CACHE);
+    if(cached){ try{ applyRemote(JSON.parse(cached)); } catch(e){} }
+    else { render(); }
+
+    checkSetup();
+
+    if(scriptUrl){
+      poll();
+      startPolling();
+    }
+  }
+
+  init();
 })();
 </script>
 </body>
