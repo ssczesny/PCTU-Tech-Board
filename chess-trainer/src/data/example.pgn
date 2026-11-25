@@ -1,0 +1,14 @@
+[Event "Live Chess"]
+[Site "Example game"]
+[Date "2026.10.12"]
+[White "You"]
+[Black "Opponent"]
+[Result "0-1"]
+[WhiteElo "812"]
+[BlackElo "845"]
+[TimeControl "600"]
+[ECO "C50"]
+[Opening "Italian Game: Giuoco Pianissimo"]
+[Termination "Opponent won by checkmate"]
+
+1. e4 {[%clk 0:09:58.8]} 1... e5 {[%clk 0:09:59.2]} 2. Nf3 {[%clk 0:09:56.7]} 2... Nc6 {[%clk 0:09:57.7]} 3. Bc4 {[%clk 0:09:53.7]} 3... Bc5 {[%clk 0:09:53.5]} 4. O-O {[%clk 0:09:48.2]} 4... Nf6 {[%clk 0:09:47.4]} 5. Nc3 {[%clk 0:09:39.8]} 5... O-O {[%clk 0:09:44.1]} 6. d3 {[%clk 0:09:33.8]} 6... d6 {[%clk 0:09:34.3]} 7. Bg5 {[%clk 0:09:21.3]} 7... Bg4 {[%clk 0:09:19.1]} 8. Nd5 {[%clk 0:09:03.2]} 8... Nd4 {[%clk 0:08:56.7]} 9. c3 {[%clk 0:08:53.6]} 9... Nxf3+ {[%clk 0:08:42.7]} 10. gxf3 {[%clk 0:08:49.5]} 10... Bh3 {[%clk 0:08:31.0]} 11. Re1 {[%clk 0:08:28.2]} 11... c6 {[%clk 0:08:13.1]} 12. Nxf6+ {[%clk 0:08:20.8]} 12... gxf6 {[%clk 0:08:07.9]} 13. Bh4 {[%clk 0:07:54.0]} 13... Kh8 {[%clk 0:07:48.4]} 14. Kh1 {[%clk 0:07:45.8]} 14... Rg8 {[%clk 0:07:24.3]} 15. Bxf6+ {[%clk 0:07:43.7]} 15... Qxf6 {[%clk 0:07:17.9]} 16. d4 {[%clk 0:07:12.2]} 16... Qg6 {[%clk 0:07:04.1]} 17. Rg1 {[%clk 0:06:56.3]} 17... Bg2+ {[%clk 0:06:59.7]} 18. Rxg2 {[%clk 0:06:52.6]} 18... Qxg2# {[%clk 0:06:57.8]} 0-1

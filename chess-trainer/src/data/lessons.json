@@ -1,0 +1,318 @@
+[
+ {
+  "id": "L-scholar",
+  "kind": "puzzle",
+  "theme": "mate",
+  "stage": 1,
+  "rating": 650,
+  "title": "Scholar’s mate",
+  "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4",
+  "line": [
+   "h5f7"
+  ],
+  "idea": "Queen and bishop both hit f7, the square only the king defends. Every beginner should know this pattern so they can deliver it and, more importantly, stop it: answer an early Qh5 with g6 or Qe7."
+ },
+ {
+  "id": "L-caro-nd6",
+  "kind": "puzzle",
+  "theme": "smothered",
+  "stage": 3,
+  "rating": 900,
+  "title": "The Caro-Kann trap",
+  "fen": "r1bqkb1r/pp1npppp/2p2n2/8/3PN3/8/PPP1QPPP/R1B1KBNR w KQkq - 3 6",
+  "line": [
+   "e4d6"
+  ],
+  "idea": "The e7 pawn is pinned to the king by the queen on e2, so it cannot capture on d6, and the king is boxed in by its own pieces. A queen on the same file as an uncastled king is a warning sign."
+ },
+ {
+  "id": "L-backrank1",
+  "kind": "puzzle",
+  "theme": "backrank",
+  "stage": 1,
+  "rating": 700,
+  "title": "Back-rank mate",
+  "fen": "6k1/pp3ppp/8/8/8/8/2r2PPP/3R2K1 w - - 0 1",
+  "line": [
+   "d1d8"
+  ],
+  "idea": "The black king is trapped behind its own pawns on f7, g7 and h7. A rook or queen on the back rank is mate. In your own games, a quiet h3 or g3 (luft) removes this danger for good."
+ },
+ {
+  "id": "L-backrank2",
+  "kind": "puzzle",
+  "theme": "backrank",
+  "stage": 2,
+  "rating": 950,
+  "title": "Overloaded back rank",
+  "fen": "3r2k1/pp3ppp/8/8/8/8/PPqR1PPP/3R2K1 w - - 0 1",
+  "line": [
+   "d2d8"
+  ],
+  "idea": "Two attackers against one defender on the same square: after the trade, the second rook arrives with mate. Count attackers and defenders on key squares, especially on the back rank."
+ },
+ {
+  "id": "L-legal",
+  "kind": "puzzle",
+  "theme": "mate",
+  "stage": 3,
+  "rating": 1100,
+  "title": "Légal’s mate",
+  "fen": "rn1qkbnr/ppp2p1p/3p2p1/4N3/2B1P3/2N5/PPPP1PPP/R1BbK2R w KQkq - 0 6",
+  "line": [
+   "c4f7",
+   "e8e7",
+   "c3d5"
+  ],
+  "idea": "Black grabbed the queen, but the minor pieces mate: Bxf7+ drives the king to e7 and Nd5 closes the net. Before you capture a big piece, ask what your opponent gets in return."
+ },
+ {
+  "id": "L-smothered",
+  "kind": "puzzle",
+  "theme": "smothered",
+  "stage": 4,
+  "rating": 1500,
+  "title": "Smothered mate",
+  "fen": "4r2k/pp4pp/8/q2Q2N1/8/8/PP4PP/5RK1 w - - 0 1",
+  "line": [
+   "g5f7",
+   "h8g8",
+   "f7h6",
+   "g8h8",
+   "d5g8",
+   "e8g8",
+   "h6f7"
+  ],
+  "idea": "Knight checks drive the king into the corner, a queen sacrifice on g8 forces the rook to block its own king, and the knight mates on f7. Corner kings with pawns on g7 and h7 are smothered-mate candidates."
+ },
+ {
+  "id": "L-blackburne",
+  "kind": "puzzle",
+  "theme": "trap",
+  "stage": 3,
+  "rating": 1150,
+  "title": "Blackburne Shilling trap",
+  "fen": "r1b1kbnr/pppp1Npp/8/6q1/2BnP3/8/PPPP1PPP/RNBQK2R b KQkq - 0 5",
+  "line": [
+   "g5g2"
+  ],
+  "idea": "White grabbed e5 and then forked queen and rook with Nxf7, but Qxg2 hits the rook, and after Rf1 Qxe4+ Be2 the knight on d4 mates on f3. Greedy captures that leave your king short of defenders often backfire."
+ },
+ {
+  "id": "L-elephant",
+  "kind": "puzzle",
+  "theme": "trap",
+  "stage": 3,
+  "rating": 1200,
+  "title": "Elephant trap",
+  "fen": "r1bqkb1r/pppn1ppp/5n2/3N2B1/3P4/8/PP2PPPP/R2QKBNR b KQkq - 0 6",
+  "line": [
+   "f6d5"
+  ],
+  "idea": "It looks like the knight on f6 is pinned to the queen, but after Nxd5 Bxd8 Bb4+ the check comes first and Black wins a piece. A pin is only real if breaking it costs more than it gains."
+ },
+ {
+  "id": "L-noah",
+  "kind": "puzzle",
+  "theme": "trap",
+  "stage": 3,
+  "rating": 1300,
+  "title": "Noah’s Ark trap",
+  "fen": "r1bqkbnr/2p2ppp/p2p4/1p6/3QP3/1B6/PPP2PPP/RNB1K2R b KQkq - 0 8",
+  "line": [
+   "c7c5"
+  ],
+  "idea": "The bishop on b3 has run out of squares. c5 hits the queen, and ...c4 next traps the bishop. Look for pieces with no retreat before you attack them."
+ },
+ {
+  "id": "E-kqk",
+  "kind": "endgame",
+  "theme": "endgame",
+  "stage": 1,
+  "rating": 800,
+  "title": "Mate with king and queen",
+  "fen": "8/8/8/4k3/8/8/8/3QK3 w - - 0 1",
+  "goal": "mate",
+  "limit": 15,
+  "idea": "Use the queen a knight’s move away from the enemy king to shrink its box, never giving stalemate, then bring your own king up and mate on the edge."
+ },
+ {
+  "id": "E-krk",
+  "kind": "endgame",
+  "theme": "endgame",
+  "stage": 1,
+  "rating": 950,
+  "title": "Mate with king and rook",
+  "fen": "8/8/8/4k3/8/8/8/R3K3 w - - 0 1",
+  "goal": "mate",
+  "limit": 30,
+  "idea": "The rook cuts the king off along a rank or file; your king walks up to face the enemy king (opposition), then the rook checks along the edge. When the kings face each other, a rook check pushes the king back one line."
+ },
+ {
+  "id": "E-kpk-win",
+  "kind": "endgame",
+  "theme": "endgame",
+  "stage": 4,
+  "rating": 1100,
+  "title": "King in front of the pawn",
+  "fen": "4k3/8/4K3/4P3/8/8/8/8 w - - 0 1",
+  "goal": "promote",
+  "limit": 12,
+  "idea": "With your king on the sixth rank in front of your pawn, you always win: step to the side, push the pawn when the enemy king must give way, and escort it home."
+ },
+ {
+  "id": "E-kpk-draw",
+  "kind": "endgame",
+  "theme": "endgame",
+  "stage": 4,
+  "rating": 1250,
+  "title": "Hold the draw with opposition",
+  "fen": "8/8/4k3/8/4PK2/8/8/8 b - - 0 1",
+  "goal": "draw",
+  "limit": 15,
+  "idea": "Stay in front of the pawn and take the opposition: when the white king steps forward, put your king directly opposite it with one square between. Retreat straight back, never to the side."
+ },
+ {
+  "id": "E-lucena",
+  "kind": "endgame",
+  "theme": "endgame",
+  "stage": 4,
+  "rating": 1500,
+  "title": "Lucena: build a bridge",
+  "fen": "1K1k4/1P6/8/8/8/8/r7/2R5 w - - 0 1",
+  "goal": "promote",
+  "limit": 15,
+  "idea": "Check the black king away with the rook, bring your rook to the fourth rank, step out with your king, and when the checks come, block with the rook (the bridge)."
+ },
+ {
+  "id": "T-fork-ne7",
+  "kind": "puzzle",
+  "theme": "fork",
+  "stage": 2,
+  "rating": 1000,
+  "title": "Knight fork: king and queen",
+  "fen": "r4rk1/pp1b1ppp/2qp4/3Np3/4P3/1B1P4/PPP2PPP/R2Q1RK1 w - - 0 12",
+  "line": [
+   "d5e7"
+  ],
+  "idea": "A knight check that also hits the queen wins it outright, because the king must move first. Look for knight checks that land on squares where your knight also attacks something big."
+ },
+ {
+  "id": "T-pawnfork",
+  "kind": "puzzle",
+  "theme": "fork",
+  "stage": 2,
+  "rating": 1050,
+  "title": "Pawn fork",
+  "fen": "r1bq1rk1/pp3ppp/2n1n3/8/3P4/2N2N2/PP2BPPP/R2Q1RK1 w - - 0 11",
+  "line": [
+   "d4d5"
+  ],
+  "idea": "Two pieces side by side with one empty square in front: a pawn push forks them. The humblest piece makes the best forker because anything it attacks is worth more."
+ },
+ {
+  "id": "T-pin-re1",
+  "kind": "puzzle",
+  "theme": "pin",
+  "stage": 2,
+  "rating": 1050,
+  "title": "Pin the queen to the king",
+  "fen": "rnb1kb1r/ppppqppp/7n/8/2B5/5N2/PPPP1PPP/RNBQ1RK1 w kq - 0 7",
+  "line": [
+   "f1e1"
+  ],
+  "idea": "Queen and king on the same open file is an emergency. A rook on that file pins the queen, and since it cannot step off the file, it is lost for a rook. Castle early, and keep the queen off your king’s file."
+ },
+ {
+  "id": "T-skewer",
+  "kind": "puzzle",
+  "theme": "skewer",
+  "stage": 2,
+  "rating": 1150,
+  "title": "Bishop skewer",
+  "fen": "3r4/2k2ppp/p3b3/1p6/4P3/5N2/PP3PPP/4BRK1 w - - 0 25",
+  "line": [
+   "e1a5"
+  ],
+  "idea": "Check the king, it steps aside, and you take what was hiding behind it. When the enemy king and a rook share a diagonal, look for a bishop check along it."
+ },
+ {
+  "id": "T-discovered",
+  "kind": "puzzle",
+  "theme": "discovered",
+  "stage": 2,
+  "rating": 1150,
+  "title": "Discovered attack with check",
+  "fen": "rnb2rk1/pp3ppp/2pq4/8/8/3B1N2/PPP1QPPP/R2R2K1 w - - 0 13",
+  "line": [
+   "d3h7"
+  ],
+  "idea": "Any bishop move uncovers the rook on the queen, but only a bishop move with check stops Black from saving the queen. Two threats at once, and the check comes first."
+ },
+ {
+  "id": "T-qh7",
+  "kind": "puzzle",
+  "theme": "mate",
+  "stage": 1,
+  "rating": 750,
+  "title": "Queen and bishop on h7",
+  "fen": "rnbq1rk1/ppp2ppp/3p4/4p2Q/8/3B4/PPPP1PPP/RNB1K1NR w KQ - 0 7",
+  "line": [
+   "h5h7"
+  ],
+  "idea": "The queen lands next to the king, protected by the bishop, and the king’s own rook and pawns take away its escape squares. Queen-plus-bishop batteries aimed at h7 are among the most common mates in club games."
+ },
+ {
+  "id": "T-smothered2",
+  "kind": "puzzle",
+  "theme": "smothered",
+  "stage": 3,
+  "rating": 1250,
+  "title": "Smothered mate in two",
+  "fen": "3r3k/pp4pp/4Q3/q5N1/2B5/8/PP3PPP/R4RK1 w - - 0 20",
+  "line": [
+   "e6g8",
+   "d8g8",
+   "g5f7"
+  ],
+  "idea": "The queen check on g8 cannot be taken by the king (the bishop guards it), so the rook must capture and block its own king in. The knight mates on f7."
+ },
+ {
+  "id": "L-englund",
+  "kind": "puzzle",
+  "theme": "trap",
+  "stage": 3,
+  "rating": 1150,
+  "title": "Englund Gambit trap",
+  "fen": "r1b1kbnr/pppp1ppp/2n5/4P3/8/2B2N2/PqP1PPPP/RN1QKB1R b KQkq - 1 6",
+  "line": [
+   "f8b4"
+  ],
+  "idea": "The bishop pins the c3 bishop to the queen, and the white queen has to defend, leaving c1 for a back-rank mate. Watch for traps after early pawn grabs, on both sides of the board."
+ },
+ {
+  "id": "L-fishing",
+  "kind": "puzzle",
+  "theme": "trap",
+  "stage": 3,
+  "rating": 1250,
+  "title": "Fishing Pole trap",
+  "fen": "r1bqkb1r/pppp1pp1/2n5/1B2p2p/4P1P1/5N2/PPPP1PP1/RNBQ1RK1 b kq - 0 6",
+  "line": [
+   "h5g4"
+  ],
+  "idea": "Taking the knight opened the h-file toward the white king. After hxg4 the queen joins on h4 with mate threats. Before you take a bait piece near your king, ask which file or diagonal it opens."
+ },
+ {
+  "id": "E-square",
+  "kind": "endgame",
+  "theme": "endgame",
+  "stage": 2,
+  "rating": 850,
+  "title": "Catch the pawn: the square rule",
+  "fen": "8/8/8/8/p7/8/8/4K3 w - - 0 1",
+  "goal": "draw",
+  "limit": 8,
+  "idea": "Draw a square from the pawn to its promotion rank. If your king can step inside that square, it catches the pawn. Head diagonally toward the corner, not straight across."
+ }
+]
