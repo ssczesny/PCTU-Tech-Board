@@ -56,8 +56,11 @@ const lineGapOK = gap => gap.length <= 48 && !/[A-Za-z)\]"’'][.!?](\s|$)/.test
 
 /* Turn notation inside `container` into .mv links and, with opts.figs, add a strip of small boards under each
    paragraph or list item that walks through moves.
-   bases: [{fen, ply, pre}] positions the text may be talking about, most likely first. `ply`/`pre` say how to
-   reach the position on the main board (game ply, then extra moves); ply null = not on the main board.
+   bases: [{fen, ply, pre, own}] positions the text may be talking about, most likely first. `ply`/`pre` say
+   how to reach the position on the main board (game ply, then extra moves); ply null = not on the main board.
+   `own` (optional) is a set of moves that, written without a move number, are known to start from that
+   position: the move being explained and the engine's pick, which the other side can sometimes play too
+   (castling, a recapture on the same square).
    A move is matched against the line being followed first ("15. Rg1 Qe7 16. Qd2"), then against the bases. */
 function linkMoves(container, bases, opts = {}) {
   if (!container || !bases || !bases.length) return;
@@ -108,22 +111,32 @@ function linkBlock(block, bases) {
         dots = m[3],
         san = m[4];
       const start = m.index + m[0].indexOf(whole);
-      if (/^[a-h][1-8]$/.test(san) && num == null) continue; // a bare square is not a move
       const color = dots ? (dots === '...' ? 'b' : 'w') : null;
       const fits = fen => (!color || fenTurn(fen) === color) && (num == null || fenFull(fen) === num);
       const here = gap + s.slice(last, start);
       let hit = null,
         base = null,
         cont = false;
-      if (line && lineGapOK(here) && fits(line.fen) && (hit = legalSan(line.fen, san))) cont = true;
-      if (!hit)
-        for (const b of bases)
+      if (/^[a-h][1-8]$/.test(san) && num == null) {
+        // A bare square is a pawn move only when it directly continues a line ("3. d4 d5 4. Nxe5");
+        // in "the knight on e5" it is just a square.
+        if (!(line && /^\s*$/.test(here) && (hit = legalSan(line.fen, san)))) continue;
+        cont = true;
+      }
+      if (!hit && line && lineGapOK(here) && fits(line.fen) && (hit = legalSan(line.fen, san))) cont = true;
+      if (!hit) {
+        const mine = num == null ? bases.filter(b => b.own && b.own.has(san)) : [];
+        for (const b of mine.concat(bases))
           if (fits(b.fen) && (hit = legalSan(b.fen, san))) {
             base = b;
             break;
           }
+      }
       if (!hit && line && fits(line.fen) && (hit = legalSan(line.fen, san))) cont = true;
-      if (!hit) continue;
+      if (!hit) {
+        line = null; // a move that cannot be placed ends the line; later moves must not hang off a stale position
+        continue;
+      }
       const before = cont ? line.fen : base.fen;
       const after = fenAfter(before, hit);
       if (!after) continue;
@@ -206,6 +219,7 @@ function bindMoveLinks() {
   document.addEventListener('mouseover', e => {
     const t = mvOf(e);
     if (t && t !== Pop.for && !coarsePointer()) previewMove(t);
+    else if (!t && Pop.for && !Pop.for.matches(':focus-visible') && !coarsePointer()) endPreview(); // pointer is on something else
   });
   document.addEventListener('mouseout', e => {
     const t = mvOf(e);

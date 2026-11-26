@@ -7,6 +7,8 @@
    until the stepping stops, so no work is spent on moves that are only passed through. */
 const NAV_RAPID_MS = 150;
 const Nav = { seq: 0, lastAt: -1e9, timer: 0, dirty: false, userAt: 0 };
+/* Narrow screens show one column and the page itself scrolls (see the max-width: 1000px rules). */
+const ONE_COL = window.matchMedia ? window.matchMedia('(max-width: 1000px)') : { matches: false };
 function curFen() {
   const g = App.game,
     v = App.view;
@@ -60,7 +62,8 @@ function flushPanels() {
   const at = App.game.id + '|' + v.ply + '|' + (v.explore ? v.explore.fens.length : 0);
   if (at !== Nav.shownAt) {
     Nav.shownAt = at;
-    if (Nav.scrolled) {
+    if (ONE_COL.matches) pageToNewMove();
+    else if (Nav.scrolled) {
       $('#coach-scroll').scrollTop = 0;
       Nav.scrolled = false;
     }
@@ -69,6 +72,19 @@ function flushPanels() {
   renderSuggestions();
   moveListReveal();
   prewarmAround();
+}
+/* One-column layout, new position: make sure the board is on screen (it is pinned unless the screen is very
+   short), and if the reader was part-way down the previous card, bring the top of the new one back under it. */
+function pageToNewMove() {
+  const stick = $('#board-stick').getBoundingClientRect();
+  if (!stick.height) return;
+  if (stick.bottom < 80 || stick.top > window.innerHeight - 80) {
+    window.scrollBy(0, stick.top - 6);
+    return;
+  }
+  if ($('#pane-coach').hidden) return;
+  const card = $('#coach-card').getBoundingClientRect();
+  if (card.top < stick.bottom) window.scrollBy(0, card.top - stick.bottom - 10);
 }
 /* Stepping is usually sequential, so while the browser is idle the cards for the next and previous moves are
    prepared (legal-move tables, board strips, linked text). The step itself then only has to show them. */
@@ -100,6 +116,7 @@ function stepBack() {
     v.explore.evals.pop();
     if (!v.explore.moves.length) v.explore = null;
     navChanged(true);
+    evalExploreTip(); // a line opened from a board picture has no engine numbers for its earlier positions yet
     return;
   }
   if (v.ply > 0) go(v.ply - 1);
@@ -135,14 +152,19 @@ async function onBoardMove(from, to, promo) {
 async function evalExploreTip() {
   const ex = App.view.explore;
   if (!ex) return;
-  const idx = ex.fens.length - 1;
+  const idx = ex.fens.length - 1,
+    fen = ex.fens[idx];
   if (ex.evals[idx]) return;
+  let r;
   try {
-    const r = await evalFen(ex.fens[idx], { priority: 4 });
-    ex.evals[idx] = r.pos;
+    r = await evalFen(fen, { priority: 4 });
   } catch {
     return;
   }
+  // The line may have been shortened or changed while the engine was busy. A result is only kept for a
+  // position that is still at the same place in the line.
+  if (ex.fens[idx] !== fen) return;
+  ex.evals[idx] = r.pos;
   if (App.view.explore !== ex || ex.fens.length - 1 !== idx || App.tab !== 'review') return;
   renderEvalBar();
   renderDecor();

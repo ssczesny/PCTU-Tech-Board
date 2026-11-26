@@ -416,17 +416,17 @@ async function askChat(text) {
   }
 }
 /* While an answer is being written, keep the question at the top of the coach column so the answer can be
-   read from its first line as it grows. Scrolling by hand releases the pin. On phones the page scrolls, so
-   the question is only nudged into view once. */
+   read from its first line as it grows. Scrolling by hand releases the pin. On narrow screens the page
+   scrolls instead, and the question sits just under the pinned board. */
 const ChatPin = { on: false };
-function pinChat(first) {
+function pinChat() {
   if (!ChatPin.on) return;
   const qs = $$('#chat-log .msg.user');
   const q = qs[qs.length - 1];
   if (!q) return;
   const sc = $('#coach-scroll');
   if (sc.scrollHeight > sc.clientHeight + 1) sc.scrollTop += q.getBoundingClientRect().top - sc.getBoundingClientRect().top - 6;
-  else if (first) q.scrollIntoView({ block: 'nearest' });
+  else if (ONE_COL.matches) q.scrollIntoView({ block: 'start' }); // lands below the board: see scroll-margin-top
 }
 function autosize() {
   const t = $('#chat-input');

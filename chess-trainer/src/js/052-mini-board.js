@@ -97,12 +97,17 @@ function lineFigs(base, steps, { orient, max = 4, tone = 'coach', firstTag = '',
 }
 
 /* Floating preview shown while a move in the text is hovered or focused. */
-const Pop = { el: null, for: null };
+const Pop = { el: null, for: null, watch: null };
 function showPop(target, html) {
   if (!Pop.el) {
     Pop.el = el('div', { class: 'mv-pop', role: 'tooltip', hidden: true });
     document.body.append(Pop.el);
+    // Streaming text and re-rendered cards replace the hovered link without any mouse event; watch for that.
+    Pop.watch = new MutationObserver(() => {
+      if (Pop.for && !Pop.for.isConnected) endPreview();
+    });
   }
+  Pop.watch.observe($('#app') || document.body, { childList: true, subtree: true });
   Pop.el.innerHTML = html;
   Pop.el.hidden = false;
   Pop.for = target;
@@ -119,5 +124,6 @@ function showPop(target, html) {
 }
 function hidePop() {
   if (Pop.el) Pop.el.hidden = true;
+  if (Pop.watch) Pop.watch.disconnect();
   Pop.for = null;
 }

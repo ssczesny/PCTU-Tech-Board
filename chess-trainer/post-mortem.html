@@ -321,38 +321,170 @@ select {
   width: 100%;
   min-width: 0;
 }
+/* The board and the side-line banner travel together. On wide screens the wrapper is invisible to layout
+   (the banner still sits under the lower player row). */
+.board-stick {
+  display: contents;
+}
+.review .board-col > #player-bottom {
+  order: 1;
+}
+.review .explore-banner {
+  order: 2;
+}
+.review .board-col > .navbar,
+.review .board-col > .toggles,
+.review .board-col > .graph-card {
+  order: 3;
+}
 @media (max-width: 1000px) {
   .board-col {
     width: min(100%, 640px);
     margin: 0 auto;
   }
-  /* One column: the coach comes straight after the board and its controls; the eval graph moves below it. */
+  /* One column, and the page itself scrolls. The board stays pinned to the top and the step buttons to the
+     bottom, so a move can be read and stepped without losing sight of the position; the coach comes straight
+     after the board, the eval graph last. */
   .review {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    --col: min(100%, 640px);
   }
   .review > .board-col {
     display: contents;
   }
   .review > .board-col > * {
-    width: min(100%, 640px);
+    width: var(--col);
     margin-inline: auto;
+  }
+  .review .board-col > #player-top {
+    order: 1;
+  }
+  .review .board-col > .board-stick {
+    order: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--paper);
+    padding-block: 6px;
+    margin-block: -6px;
+  }
+  .review .board-stick > * {
+    width: min(100%, 640px, max(300px, 54vh));
+    width: min(100%, 640px, max(300px, 54dvh));
+    margin-inline: auto;
+  }
+  .review .board-stick > .explore-banner {
+    margin-left: auto;
+    order: 2;
+  }
+  .review .board-col > #player-bottom {
+    order: 3;
+  }
+  .review .board-col > .toggles {
+    order: 4;
   }
   .review > .side {
-    order: 2;
-    width: min(100%, 640px);
+    order: 5;
+    width: var(--col);
     margin-inline: auto;
   }
-  .review .graph-card {
-    order: 3;
+  .review .board-col > .graph-card {
+    order: 6;
     width: min(calc(100% - 26px), 614px);
     margin-left: auto;
   }
+  .review .board-col > .navbar {
+    order: 9;
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    width: 100%;
+    justify-content: center;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom, 0px));
+    margin-bottom: -8px;
+    background: var(--paper);
+    box-shadow: 0 -1px 0 var(--rule);
+  }
+  .review .navbar .nbtn {
+    height: 44px;
+    max-width: 132px;
+  }
+}
+/* Anything the browser scrolls into view (a chat question, a focused control, find-in-page) lands clear of the
+   pinned board and step buttons. Both sizes are 0 unless something is pinned (set in bindUI). */
+html {
+  scroll-padding-top: calc(var(--pin-top, 0px) + 10px);
+  scroll-padding-bottom: calc(var(--pin-bottom, 0px) + 10px);
+}
+@media (max-width: 1000px) {
+  html,
+  body {
+    overflow-anchor: none;
+  }
+}
+/* Too short to pin anything (phone on its side, on-screen keyboard): everything scrolls, buttons under the board. */
+@media (max-width: 1000px) and (max-height: 560px) {
+  .review .board-col > .board-stick {
+    position: static;
+  }
+  .review .board-col > .navbar {
+    position: static;
+    order: 3;
+    width: var(--col);
+    box-shadow: none;
+    padding: 0 0 0 26px;
+    margin-bottom: 0;
+  }
+  .review .board-col > #player-bottom {
+    order: 2;
+  }
 }
 @media (max-width: 560px) {
+  /* Phone header in two rows: mark and sections, then the game picker and Import. */
+  .topbar {
+    gap: 8px 10px;
+    padding-block: 8px 10px;
+  }
+  .brand {
+    margin-right: 0;
+  }
+  .brand-name,
   .brand-sub {
     display: none;
+  }
+  .tabs {
+    flex: 1;
+  }
+  .tab {
+    flex: 1;
+    justify-content: center;
+    padding: 7px 8px;
+  }
+  .top-actions {
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+  .top-actions #btn-library {
+    flex: 1;
+    justify-content: space-between;
+  }
+  .btn .label-ellipsis {
+    max-width: none;
+  }
+  .review .toggles {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-left: 0;
+  }
+  .review .toggles .tog {
+    flex: none;
   }
 }
 .board-row {
@@ -367,6 +499,15 @@ select {
   overflow: hidden;
   position: relative;
   background: var(--bar-b);
+}
+/* An outline, so Black's half does not melt into a dark page. */
+.evalbar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 30%, transparent);
+  pointer-events: none;
 }
 .evalbar .fill {
   position: absolute;
@@ -1591,6 +1732,8 @@ button.fig:focus-visible {
 .stat-col .sc-r {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
   color: var(--ink-2);
 }
 .stat-col .sc-r b {
@@ -1823,6 +1966,45 @@ button.fig:focus-visible {
 }
 .trow.pic {
   grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+}
+@media (max-width: 560px) {
+  /* Board on the left; title, theme and status stacked beside it, so no title is cut to a few letters. */
+  .trow.pic {
+    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-template-areas: 'pic dot tt' 'pic . tm' 'pic . ts';
+    gap: 1px 10px;
+    align-items: start;
+    align-content: center;
+  }
+  .trow.pic > .mb {
+    grid-area: pic;
+    align-self: center;
+  }
+  .trow.pic > .tdot {
+    grid-area: dot;
+    margin-top: 5px;
+  }
+  .trow.pic > .tt {
+    grid-area: tt;
+    white-space: normal;
+  }
+  .trow.pic > .tm {
+    grid-area: tm;
+  }
+  .trow.pic > .ts {
+    grid-area: ts;
+  }
+  .lib-item {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .lib-item .li-sub {
+    white-space: normal;
+  }
+  .lib-item .li-act {
+    grid-column: 2;
+    justify-content: flex-start;
+    gap: 10px;
+  }
 }
 .trow:last-child {
   border-bottom: 0;
@@ -2445,6 +2627,45 @@ dialog::backdrop {
   color: var(--kc);
 }
 
+/* ---------- touch: nothing you tap is smaller than a fingertip ---------- */
+@media (pointer: coarse) {
+  .btn.small,
+  .tog,
+  .sugg,
+  .seg button {
+    min-height: 36px;
+  }
+  .btn.small {
+    padding-inline: 12px;
+  }
+  .sugg {
+    padding: 6px 12px;
+  }
+  .switch {
+    min-height: 36px;
+  }
+  .switch input {
+    width: 20px;
+    height: 20px;
+  }
+  .movelist .mvc {
+    padding-block: 8px;
+  }
+  .msg.user .at {
+    padding-block: 7px 3px;
+    margin-top: -7px;
+  }
+  /* Move links keep their look; an invisible margin around each makes them easier to hit. */
+  .mv {
+    position: relative;
+  }
+  .mv::after {
+    content: '';
+    position: absolute;
+    inset: -7px -3px;
+  }
+}
+
 /* pieces (cburnett set by Colin M.L. Burnett, CC BY-SA 3.0) */
 .pc-wP{background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHBhdGggZD0iTTIyLjUgOWMtMi4yMSAwLTQgMS43OS00IDQgMCAuODkuMjkgMS43MS43OCAyLjM4QzE3LjMzIDE2LjUgMTYgMTguNTkgMTYgMjFjMCAyLjAzLjk0IDMuODQgMi40MSA1LjAzLTMgMS4wNi03LjQxIDUuNTUtNy40MSAxMy40N2gyM2MwLTcuOTItNC40MS0xMi40MS03LjQxLTEzLjQ3IDEuNDctMS4xOSAyLjQxLTMgMi40MS01LjAzIDAtMi40MS0xLjMzLTQuNS0zLjI4LTUuNjIuNDktLjY3Ljc4LTEuNDkuNzgtMi4zOCAwLTIuMjEtMS43OS00LTQtNHoiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==")}
 .pc-wB{background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxnIGZpbGw9IiNmZmYiIHN0cm9rZS1saW5lY2FwPSJidXR0Ij48cGF0aCBkPSJNOSAzNmMzLjM5LS45NyAxMC4xMS40MyAxMy41LTIgMy4zOSAyLjQzIDEwLjExIDEuMDMgMTMuNSAyIDAgMCAxLjY1LjU0IDMgMi0uNjguOTctMS42NS45OS0zIC41LTMuMzktLjk3LTEwLjExLjQ2LTEzLjUtMS0zLjM5IDEuNDYtMTAuMTEuMDMtMTMuNSAxLTEuMzU0LjQ5LTIuMzIzLjQ3LTMtLjUgMS4zNTQtMS45NCAzLTIgMy0yeiIvPjxwYXRoIGQ9Ik0xNSAzMmMyLjUgMi41IDEyLjUgMi41IDE1IDAgLjUtMS41IDAtMiAwLTIgMC0yLjUtMi41LTQtMi41LTQgNS41LTEuNSA2LTExLjUtNS0xNS41LTExIDQtMTAuNSAxNC01IDE1LjUgMCAwLTIuNSAxLjUtMi41IDQgMCAwLS41LjUgMCAyeiIvPjxwYXRoIGQ9Ik0yNSA4YTIuNSAyLjUgMCAxIDEtNSAwIDIuNSAyLjUgMCAxIDEgNSAweiIvPjwvZz48cGF0aCBkPSJNMTcuNSAyNmgxME0xNSAzMGgxNW0tNy41LTE0LjV2NU0yMCAxOGg1IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PC9nPjwvc3ZnPg==")}
@@ -2484,13 +2705,15 @@ dialog::backdrop {
     <section class="view review" id="view-review">
       <div class="board-col">
         <div class="player" id="player-top"></div>
-        <div class="board-row">
-          <div class="evalbar" id="evalbar" aria-hidden="true"><div class="fill"></div><span class="etext"></span></div>
-          <div id="board" aria-label="Chess board"></div>
+        <div class="board-stick" id="board-stick">
+          <div class="board-row">
+            <div class="evalbar" id="evalbar" aria-hidden="true"><div class="fill"></div><span class="etext"></span></div>
+            <div id="board" aria-label="Chess board"></div>
+          </div>
+          <div class="explore-banner" id="explore-banner" hidden></div>
         </div>
         <div class="player" id="player-bottom"></div>
-        <div class="explore-banner" id="explore-banner" hidden></div>
-        <div class="navbar">
+        <div class="navbar" id="navbar">
           <button class="nbtn" id="nav-first" aria-label="Start of game"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L10 12z"/></svg></button>
           <button class="nbtn" id="nav-prev" aria-label="Previous move"><svg viewBox="0 0 24 24"><path d="M16 5v14L6 12z"/></svg></button>
           <button class="nbtn" id="nav-next" aria-label="Next move"><svg viewBox="0 0 24 24"><path d="M8 5v14l10-7z"/></svg></button>
@@ -4205,7 +4428,8 @@ function createBoard(root, opts = {}) {
     selected = null,
     drag = null,
     interactive = false,
-    lastFen = null;
+    lastFen = null,
+    promoDone = null;
   const xy = sq => {
     const f = FILES.indexOf(sq[0]),
       r = +sq[1] - 1;
@@ -4236,6 +4460,17 @@ function createBoard(root, opts = {}) {
   /* animate=false snaps: pieces jump with no transition (held arrow key, long jumps). */
   function setPosition(fen, animate = true) {
     if (fen === lastFen && pieces.size) return;
+    // The position is changing under the student's hand: let go of a held piece and close the promotion
+    // picker first, so nothing is dropped back onto a square that now belongs to another position.
+    if (drag) {
+      drag.el.classList.remove('drag');
+      place(drag.el, drag.from);
+      try {
+        root.releasePointerCapture(drag.id);
+      } catch {}
+      drag = null;
+    }
+    if (promoDone) promoDone(null);
     lastFen = fen;
     dests = null;
     root.classList.toggle('snap', !animate);
@@ -4357,7 +4592,7 @@ function createBoard(root, opts = {}) {
     if (p && p.code[1] === 'P' && (to[1] === '8' || to[1] === '1')) {
       pr = await askPromo(p.code[0], to);
       if (!pr) {
-        place(p.el, from);
+        if (pieces.get(from) === p) place(p.el, from);
         drawMarks();
         return;
       }
@@ -4382,9 +4617,11 @@ function createBoard(root, opts = {}) {
       promo.style.bottom = y >= 4 ? (7 - y) * 12.5 + '%' : '';
       const done = v => {
         promo.hidden = true;
+        promoDone = null;
         document.removeEventListener('pointerdown', outside, true);
         res(v);
       };
+      promoDone = done;
       const outside = e => {
         if (!promo.contains(e.target)) done(null);
       };
@@ -4585,12 +4822,17 @@ function lineFigs(base, steps, { orient, max = 4, tone = 'coach', firstTag = '',
 }
 
 /* Floating preview shown while a move in the text is hovered or focused. */
-const Pop = { el: null, for: null };
+const Pop = { el: null, for: null, watch: null };
 function showPop(target, html) {
   if (!Pop.el) {
     Pop.el = el('div', { class: 'mv-pop', role: 'tooltip', hidden: true });
     document.body.append(Pop.el);
+    // Streaming text and re-rendered cards replace the hovered link without any mouse event; watch for that.
+    Pop.watch = new MutationObserver(() => {
+      if (Pop.for && !Pop.for.isConnected) endPreview();
+    });
   }
+  Pop.watch.observe($('#app') || document.body, { childList: true, subtree: true });
   Pop.el.innerHTML = html;
   Pop.el.hidden = false;
   Pop.for = target;
@@ -4607,6 +4849,7 @@ function showPop(target, html) {
 }
 function hidePop() {
   if (Pop.el) Pop.el.hidden = true;
+  if (Pop.watch) Pop.watch.disconnect();
   Pop.for = null;
 }
 
@@ -4619,6 +4862,8 @@ function hidePop() {
    until the stepping stops, so no work is spent on moves that are only passed through. */
 const NAV_RAPID_MS = 150;
 const Nav = { seq: 0, lastAt: -1e9, timer: 0, dirty: false, userAt: 0 };
+/* Narrow screens show one column and the page itself scrolls (see the max-width: 1000px rules). */
+const ONE_COL = window.matchMedia ? window.matchMedia('(max-width: 1000px)') : { matches: false };
 function curFen() {
   const g = App.game,
     v = App.view;
@@ -4672,7 +4917,8 @@ function flushPanels() {
   const at = App.game.id + '|' + v.ply + '|' + (v.explore ? v.explore.fens.length : 0);
   if (at !== Nav.shownAt) {
     Nav.shownAt = at;
-    if (Nav.scrolled) {
+    if (ONE_COL.matches) pageToNewMove();
+    else if (Nav.scrolled) {
       $('#coach-scroll').scrollTop = 0;
       Nav.scrolled = false;
     }
@@ -4681,6 +4927,19 @@ function flushPanels() {
   renderSuggestions();
   moveListReveal();
   prewarmAround();
+}
+/* One-column layout, new position: make sure the board is on screen (it is pinned unless the screen is very
+   short), and if the reader was part-way down the previous card, bring the top of the new one back under it. */
+function pageToNewMove() {
+  const stick = $('#board-stick').getBoundingClientRect();
+  if (!stick.height) return;
+  if (stick.bottom < 80 || stick.top > window.innerHeight - 80) {
+    window.scrollBy(0, stick.top - 6);
+    return;
+  }
+  if ($('#pane-coach').hidden) return;
+  const card = $('#coach-card').getBoundingClientRect();
+  if (card.top < stick.bottom) window.scrollBy(0, card.top - stick.bottom - 10);
 }
 /* Stepping is usually sequential, so while the browser is idle the cards for the next and previous moves are
    prepared (legal-move tables, board strips, linked text). The step itself then only has to show them. */
@@ -4712,6 +4971,7 @@ function stepBack() {
     v.explore.evals.pop();
     if (!v.explore.moves.length) v.explore = null;
     navChanged(true);
+    evalExploreTip(); // a line opened from a board picture has no engine numbers for its earlier positions yet
     return;
   }
   if (v.ply > 0) go(v.ply - 1);
@@ -4747,14 +5007,19 @@ async function onBoardMove(from, to, promo) {
 async function evalExploreTip() {
   const ex = App.view.explore;
   if (!ex) return;
-  const idx = ex.fens.length - 1;
+  const idx = ex.fens.length - 1,
+    fen = ex.fens[idx];
   if (ex.evals[idx]) return;
+  let r;
   try {
-    const r = await evalFen(ex.fens[idx], { priority: 4 });
-    ex.evals[idx] = r.pos;
+    r = await evalFen(fen, { priority: 4 });
   } catch {
     return;
   }
+  // The line may have been shortened or changed while the engine was busy. A result is only kept for a
+  // position that is still at the same place in the line.
+  if (ex.fens[idx] !== fen) return;
+  ex.evals[idx] = r.pos;
   if (App.view.explore !== ex || ex.fens.length - 1 !== idx || App.tab !== 'review') return;
   renderEvalBar();
   renderDecor();
@@ -5341,6 +5606,7 @@ function autoAllowed(g, k) {
     App.consented &&
     App.profile.settings.autoCoach &&
     !g.explanations[k] &&
+    !(g.autoOff && g.autoOff.has(k)) &&
     performance.now() >= App.autoPausedUntil
   );
 }
@@ -5378,6 +5644,7 @@ async function explainMove(k, { force = false, auto = false } = {}) {
   await Promise.all([Analyzer.want(k - 1), Analyzer.want(k)]);
   if (job.ctl.signal.aborted) {
     job.status = 'cancelled';
+    if (job.stopped) noAuto(g, k);
     paintJob(job, true);
     scheduleAutoExplain();
     return;
@@ -5406,12 +5673,24 @@ async function explainMove(k, { force = false, auto = false } = {}) {
     job.status = e && e.code === 'cancelled' ? 'cancelled' : 'error';
     job.error = e;
     if (e && OFF_CODES.has(e.code)) App.sampleOff = e.code;
-    // After a usage limit, automatic explanations pause for two minutes; a click still asks.
-    if (e && e.code === 'rate_limited') App.autoPausedUntil = performance.now() + 120000;
+    // A call that failed, or that the student stopped, is never repeated on its own for that move: only a
+    // click asks again. After any failure automatic explanations also pause everywhere for a while (two
+    // minutes after a usage limit), so stepping on does not send one doomed call per move.
+    if (job.status === 'error') {
+      noAuto(g, k);
+      App.autoPausedUntil = performance.now() + (e && e.code === 'rate_limited' ? 120000 : 45000);
+    } else if (job.stopped) noAuto(g, k);
     job.text = e && e.text && e.code !== 'refused' ? e.text : '';
   }
   paintJob(job, true);
   scheduleAutoExplain();
+}
+function noAuto(g, k) {
+  (g.autoOff || (g.autoOff = new Set())).add(k);
+}
+function stopJob(job) {
+  job.stopped = true;
+  job.ctl.abort();
 }
 /* Paint a running explanation into the card, but only if the card is showing that move right now. */
 function paintJob(job, full) {
@@ -5427,9 +5706,7 @@ function paintJob(job, full) {
     box.innerHTML = md(job.text);
     linkMoves(box, moveBases(job.g, job.k), { figs: false });
   } else
-    box.replaceChildren(
-      thinkingEl(job.phase === 'engine' ? 'Waiting for the engine…' : 'The coach is looking at the position…', () => job.ctl.abort()),
-    );
+    box.replaceChildren(thinkingEl(job.phase === 'engine' ? 'Waiting for the engine…' : 'The coach is looking at the position…', () => stopJob(job)));
 }
 function thinkingEl(text, onStop) {
   return el(
@@ -5442,9 +5719,18 @@ function thinkingEl(text, onStop) {
 }
 /* Positions the notation in an explanation of move k can refer to: after the move first, then before it. */
 function moveBases(g, k) {
+  // Written without a move number, the move being explained and the engine's pick are the mover's moves,
+  // even when the other side could play the same notation next.
+  const bare = s => s.replace(/[+#]/g, '');
+  const own = new Set([bare(g.plies[k - 1].san)]);
+  const a = g.pos[k - 1];
+  if (a && a.b) {
+    const best = lineSteps(g.fens[k - 1], a.p || a.b, 1)[0];
+    if (best) own.add(bare(best.san));
+  }
   return [
     { fen: g.fens[k], ply: k, pre: [] },
-    { fen: g.fens[k - 1], ply: k - 1, pre: [] },
+    { fen: g.fens[k - 1], ply: k - 1, pre: [], own },
   ];
 }
 
@@ -5573,7 +5859,6 @@ function renderCoachBody() {
   if (!g) return;
   ensureCard();
   const body = $('#cc-body');
-  Nav.dirty = false;
   body.classList.remove('stale');
   const kids = [];
   if (v.explore) {
@@ -5652,10 +5937,10 @@ function renderCoachBody() {
     if (job.text) {
       text.innerHTML = md(job.text);
       linkMoves(text, moveBases(g, k), { figs: false });
-    } else
-      text.append(thinkingEl(job.phase === 'engine' ? 'Waiting for the engine…' : 'The coach is looking at the position…', () => job.ctl.abort()));
+    } else text.append(thinkingEl(job.phase === 'engine' ? 'Waiting for the engine…' : 'The coach is looking at the position…', () => stopJob(job)));
   } else if (saved) {
     text.innerHTML = explanationHTML(g, k, saved.t, figs.seen);
+    if (job && job.status === 'error') text.append(el('p', { class: 'note warn', text: sampleErrorText(job.error) }));
     actions.append(el('button', { class: 'btn small', onclick: () => explainMove(k, { force: true }), text: 'Explain again' }));
   } else if (!App.sample || App.sampleOff) {
     text.append(
@@ -5904,8 +6189,11 @@ const lineGapOK = gap => gap.length <= 48 && !/[A-Za-z)\]"’'][.!?](\s|$)/.test
 
 /* Turn notation inside `container` into .mv links and, with opts.figs, add a strip of small boards under each
    paragraph or list item that walks through moves.
-   bases: [{fen, ply, pre}] positions the text may be talking about, most likely first. `ply`/`pre` say how to
-   reach the position on the main board (game ply, then extra moves); ply null = not on the main board.
+   bases: [{fen, ply, pre, own}] positions the text may be talking about, most likely first. `ply`/`pre` say
+   how to reach the position on the main board (game ply, then extra moves); ply null = not on the main board.
+   `own` (optional) is a set of moves that, written without a move number, are known to start from that
+   position: the move being explained and the engine's pick, which the other side can sometimes play too
+   (castling, a recapture on the same square).
    A move is matched against the line being followed first ("15. Rg1 Qe7 16. Qd2"), then against the bases. */
 function linkMoves(container, bases, opts = {}) {
   if (!container || !bases || !bases.length) return;
@@ -5956,22 +6244,32 @@ function linkBlock(block, bases) {
         dots = m[3],
         san = m[4];
       const start = m.index + m[0].indexOf(whole);
-      if (/^[a-h][1-8]$/.test(san) && num == null) continue; // a bare square is not a move
       const color = dots ? (dots === '...' ? 'b' : 'w') : null;
       const fits = fen => (!color || fenTurn(fen) === color) && (num == null || fenFull(fen) === num);
       const here = gap + s.slice(last, start);
       let hit = null,
         base = null,
         cont = false;
-      if (line && lineGapOK(here) && fits(line.fen) && (hit = legalSan(line.fen, san))) cont = true;
-      if (!hit)
-        for (const b of bases)
+      if (/^[a-h][1-8]$/.test(san) && num == null) {
+        // A bare square is a pawn move only when it directly continues a line ("3. d4 d5 4. Nxe5");
+        // in "the knight on e5" it is just a square.
+        if (!(line && /^\s*$/.test(here) && (hit = legalSan(line.fen, san)))) continue;
+        cont = true;
+      }
+      if (!hit && line && lineGapOK(here) && fits(line.fen) && (hit = legalSan(line.fen, san))) cont = true;
+      if (!hit) {
+        const mine = num == null ? bases.filter(b => b.own && b.own.has(san)) : [];
+        for (const b of mine.concat(bases))
           if (fits(b.fen) && (hit = legalSan(b.fen, san))) {
             base = b;
             break;
           }
+      }
       if (!hit && line && fits(line.fen) && (hit = legalSan(line.fen, san))) cont = true;
-      if (!hit) continue;
+      if (!hit) {
+        line = null; // a move that cannot be placed ends the line; later moves must not hang off a stale position
+        continue;
+      }
       const before = cont ? line.fen : base.fen;
       const after = fenAfter(before, hit);
       if (!after) continue;
@@ -6054,6 +6352,7 @@ function bindMoveLinks() {
   document.addEventListener('mouseover', e => {
     const t = mvOf(e);
     if (t && t !== Pop.for && !coarsePointer()) previewMove(t);
+    else if (!t && Pop.for && !Pop.for.matches(':focus-visible') && !coarsePointer()) endPreview(); // pointer is on something else
   });
   document.addEventListener('mouseout', e => {
     const t = mvOf(e);
@@ -6509,17 +6808,17 @@ async function askChat(text) {
   }
 }
 /* While an answer is being written, keep the question at the top of the coach column so the answer can be
-   read from its first line as it grows. Scrolling by hand releases the pin. On phones the page scrolls, so
-   the question is only nudged into view once. */
+   read from its first line as it grows. Scrolling by hand releases the pin. On narrow screens the page
+   scrolls instead, and the question sits just under the pinned board. */
 const ChatPin = { on: false };
-function pinChat(first) {
+function pinChat() {
   if (!ChatPin.on) return;
   const qs = $$('#chat-log .msg.user');
   const q = qs[qs.length - 1];
   if (!q) return;
   const sc = $('#coach-scroll');
   if (sc.scrollHeight > sc.clientHeight + 1) sc.scrollTop += q.getBoundingClientRect().top - sc.getBoundingClientRect().top - 6;
-  else if (first) q.scrollIntoView({ block: 'nearest' });
+  else if (ONE_COL.matches) q.scrollIntoView({ block: 'start' }); // lands below the board: see scroll-margin-top
 }
 function autosize() {
   const t = $('#chat-input');
@@ -6531,6 +6830,7 @@ function autosize() {
 async function writeSummary(force) {
   const g = App.game;
   if (!g || !App.sample || App.sampleOff) return;
+  if (g.summaryBusy && g.summaryBusy.ctl) return;
   if (!g.pos.every(Boolean)) {
     toast('The summary needs the full engine analysis. It will be ready in a moment.');
     return;
@@ -6554,10 +6854,10 @@ Reply with ONLY a JSON object of this shape:
  "strengths": ["one or two things the student did well"],
  "focus": [{"title": "skill to work on", "why": "evidence from this game", "drill": "a concrete practice task for this week"}]}
 Use 2 to 4 keyMoments (the biggest swings or most instructive moves, using the ply numbers above) and 2 to 3 focus items. Only cite tactics that the grades and best moves above support.`;
-  App.summaryBusy = { g, ctl: new AbortController() };
+  const busy = (g.summaryBusy = { ctl: new AbortController() });
   renderSummary();
   try {
-    const opts = { signal: App.summaryBusy.ctl.signal, modelTier: 'default' };
+    const opts = { signal: busy.ctl.signal, modelTier: 'default' };
     if (force) opts.cache = false;
     const data = await App.sample.json(prompt, opts);
     App.consented = true;
@@ -6573,10 +6873,10 @@ Use 2 to 4 keyMoments (the biggest swings or most instructive moves, using the p
       at: Date.now(),
     };
     saveGame(g, { summary: g.summary });
-    App.summaryBusy = null;
+    g.summaryBusy = null;
   } catch (e) {
     if (e && OFF_CODES.has(e.code)) App.sampleOff = e.code;
-    App.summaryBusy = e && e.code === 'cancelled' ? null : { g, error: e };
+    g.summaryBusy = e && e.code === 'cancelled' ? null : { error: e };
   }
   if (App.game === g) renderSummary();
 }
@@ -6623,7 +6923,7 @@ function renderSummary() {
       );
     box.append(el('div', { class: 'stat-row' }, col('You', ua, st.counts, g.userColor), col('Opponent', oa, ost, other(g.userColor))));
   }
-  const busy = App.summaryBusy && App.summaryBusy.g === g ? App.summaryBusy : null;
+  const busy = g.summaryBusy || null;
   if (g.summary) {
     const s = g.summary;
     box.append(el('h3', { text: s.headline }), el('p', { class: 'prose', style: 'margin:0', text: s.story }));
@@ -8482,7 +8782,6 @@ function setGame(g, ply) {
     showThreat: App.view.showThreat,
     showLoose: App.view.showLoose,
   };
-  App.summaryBusy = null;
   App.coachArrows = [];
   App.coachSquares = [];
   App.guess.res = {};
@@ -8621,10 +8920,7 @@ function bindUI() {
   $('#nav-prev').addEventListener('click', stepBack);
   $('#nav-next').addEventListener('click', stepForward);
   $('#nav-last').addEventListener('click', () => go(App.game.plies.length));
-  $('#nav-flip').addEventListener('click', () => {
-    App.view.orient = other(App.view.orient);
-    updateReview();
-  });
+  $('#nav-flip').addEventListener('click', flipBoard);
   $('#tog-best').addEventListener('click', () => {
     App.view.showBest = !App.view.showBest;
     renderDecor();
@@ -8761,6 +9057,20 @@ function bindUI() {
     }),
   );
   bindMoveLinks();
+  // Narrow, tall screens pin the board to the top and the step buttons to the bottom (see the styles). Their
+  // sizes feed scroll-padding, so nothing that is scrolled into view ends up hidden behind them.
+  if (window.ResizeObserver && window.matchMedia) {
+    const stick = $('#board-stick'),
+      root = document.documentElement;
+    const pinned = window.matchMedia('(max-width: 1000px) and (min-height: 561px)');
+    const setPins = () => {
+      const h = pinned.matches ? Math.round(stick.getBoundingClientRect().height) : 0;
+      root.style.setProperty('--pin-top', h + 'px');
+      root.style.setProperty('--pin-bottom', (h ? Math.round($('#navbar').getBoundingClientRect().height) : 0) + 'px');
+    };
+    new ResizeObserver(setPins).observe(stick);
+    pinned.addEventListener('change', setPins);
+  }
   for (const type of ['pointerdown', 'keydown', 'wheel'])
     document.addEventListener(
       type,
@@ -8769,16 +9079,17 @@ function bindUI() {
       },
       { capture: true, passive: true },
     );
-  for (const type of ['wheel', 'touchmove']) $('#coach-scroll').addEventListener(type, () => (ChatPin.on = false), { passive: true });
+  for (const type of ['wheel', 'touchmove']) document.addEventListener(type, () => (ChatPin.on = false), { passive: true });
   $('#coach-scroll').addEventListener('scroll', () => (Nav.scrolled = true), { passive: true });
   // Stepping keys work from anywhere in Review except while typing or with a dialog open. Buttons, checkboxes
   // and links keep focus without swallowing the arrows.
-  const typing = t => {
+  const inField = t => {
     if (!t || !t.closest) return false;
-    if (t.id === 'chat-input' && !t.value) return false; // an empty question box has nothing for the arrows to do
     if (t.closest('textarea, select, [contenteditable]')) return true;
     return t.matches('input') && !/^(checkbox|radio|button|submit|range)$/i.test(t.type);
   };
+  // An empty question box has nothing for the arrows to do, so they still step from there.
+  const typing = t => inField(t) && !(t.id === 'chat-input' && !t.value);
   document.addEventListener('keydown', e => {
     if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || App.tab !== 'review' || !App.game) return;
     if (typing(e.target) || document.querySelector('dialog[open]')) return;
@@ -8794,11 +9105,18 @@ function bindUI() {
     } else if (e.key === 'End') {
       e.preventDefault();
       go(App.game.plies.length);
-    } else if ((e.key === 'f' || e.key === 'F') && !e.shiftKey) {
-      App.view.orient = other(App.view.orient);
-      updateReview();
+    } else if ((e.key === 'f' || e.key === 'F') && !e.shiftKey && !inField(e.target)) {
+      flipBoard();
     }
   });
+}
+/* Turn the board round, and with it every small board on screen (card, chat answers, key moments). */
+function flipBoard() {
+  if (!App.game) return;
+  App.view.orient = other(App.view.orient);
+  updateReview();
+  renderChat();
+  renderSummary();
 }
 async function boot() {
   if (!window.Chess) {

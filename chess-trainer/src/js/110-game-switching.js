@@ -27,7 +27,6 @@ function setGame(g, ply) {
     showThreat: App.view.showThreat,
     showLoose: App.view.showLoose,
   };
-  App.summaryBusy = null;
   App.coachArrows = [];
   App.coachSquares = [];
   App.guess.res = {};

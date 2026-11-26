@@ -2,6 +2,7 @@
 async function writeSummary(force) {
   const g = App.game;
   if (!g || !App.sample || App.sampleOff) return;
+  if (g.summaryBusy && g.summaryBusy.ctl) return;
   if (!g.pos.every(Boolean)) {
     toast('The summary needs the full engine analysis. It will be ready in a moment.');
     return;
@@ -25,10 +26,10 @@ Reply with ONLY a JSON object of this shape:
  "strengths": ["one or two things the student did well"],
  "focus": [{"title": "skill to work on", "why": "evidence from this game", "drill": "a concrete practice task for this week"}]}
 Use 2 to 4 keyMoments (the biggest swings or most instructive moves, using the ply numbers above) and 2 to 3 focus items. Only cite tactics that the grades and best moves above support.`;
-  App.summaryBusy = { g, ctl: new AbortController() };
+  const busy = (g.summaryBusy = { ctl: new AbortController() });
   renderSummary();
   try {
-    const opts = { signal: App.summaryBusy.ctl.signal, modelTier: 'default' };
+    const opts = { signal: busy.ctl.signal, modelTier: 'default' };
     if (force) opts.cache = false;
     const data = await App.sample.json(prompt, opts);
     App.consented = true;
@@ -44,10 +45,10 @@ Use 2 to 4 keyMoments (the biggest swings or most instructive moves, using the p
       at: Date.now(),
     };
     saveGame(g, { summary: g.summary });
-    App.summaryBusy = null;
+    g.summaryBusy = null;
   } catch (e) {
     if (e && OFF_CODES.has(e.code)) App.sampleOff = e.code;
-    App.summaryBusy = e && e.code === 'cancelled' ? null : { g, error: e };
+    g.summaryBusy = e && e.code === 'cancelled' ? null : { error: e };
   }
   if (App.game === g) renderSummary();
 }
@@ -94,7 +95,7 @@ function renderSummary() {
       );
     box.append(el('div', { class: 'stat-row' }, col('You', ua, st.counts, g.userColor), col('Opponent', oa, ost, other(g.userColor))));
   }
-  const busy = App.summaryBusy && App.summaryBusy.g === g ? App.summaryBusy : null;
+  const busy = g.summaryBusy || null;
   if (g.summary) {
     const s = g.summary;
     box.append(el('h3', { text: s.headline }), el('p', { class: 'prose', style: 'margin:0', text: s.story }));

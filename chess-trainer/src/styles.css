@@ -315,38 +315,170 @@ select {
   width: 100%;
   min-width: 0;
 }
+/* The board and the side-line banner travel together. On wide screens the wrapper is invisible to layout
+   (the banner still sits under the lower player row). */
+.board-stick {
+  display: contents;
+}
+.review .board-col > #player-bottom {
+  order: 1;
+}
+.review .explore-banner {
+  order: 2;
+}
+.review .board-col > .navbar,
+.review .board-col > .toggles,
+.review .board-col > .graph-card {
+  order: 3;
+}
 @media (max-width: 1000px) {
   .board-col {
     width: min(100%, 640px);
     margin: 0 auto;
   }
-  /* One column: the coach comes straight after the board and its controls; the eval graph moves below it. */
+  /* One column, and the page itself scrolls. The board stays pinned to the top and the step buttons to the
+     bottom, so a move can be read and stepped without losing sight of the position; the coach comes straight
+     after the board, the eval graph last. */
   .review {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    --col: min(100%, 640px);
   }
   .review > .board-col {
     display: contents;
   }
   .review > .board-col > * {
-    width: min(100%, 640px);
+    width: var(--col);
     margin-inline: auto;
+  }
+  .review .board-col > #player-top {
+    order: 1;
+  }
+  .review .board-col > .board-stick {
+    order: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--paper);
+    padding-block: 6px;
+    margin-block: -6px;
+  }
+  .review .board-stick > * {
+    width: min(100%, 640px, max(300px, 54vh));
+    width: min(100%, 640px, max(300px, 54dvh));
+    margin-inline: auto;
+  }
+  .review .board-stick > .explore-banner {
+    margin-left: auto;
+    order: 2;
+  }
+  .review .board-col > #player-bottom {
+    order: 3;
+  }
+  .review .board-col > .toggles {
+    order: 4;
   }
   .review > .side {
-    order: 2;
-    width: min(100%, 640px);
+    order: 5;
+    width: var(--col);
     margin-inline: auto;
   }
-  .review .graph-card {
-    order: 3;
+  .review .board-col > .graph-card {
+    order: 6;
     width: min(calc(100% - 26px), 614px);
     margin-left: auto;
   }
+  .review .board-col > .navbar {
+    order: 9;
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    width: 100%;
+    justify-content: center;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom, 0px));
+    margin-bottom: -8px;
+    background: var(--paper);
+    box-shadow: 0 -1px 0 var(--rule);
+  }
+  .review .navbar .nbtn {
+    height: 44px;
+    max-width: 132px;
+  }
+}
+/* Anything the browser scrolls into view (a chat question, a focused control, find-in-page) lands clear of the
+   pinned board and step buttons. Both sizes are 0 unless something is pinned (set in bindUI). */
+html {
+  scroll-padding-top: calc(var(--pin-top, 0px) + 10px);
+  scroll-padding-bottom: calc(var(--pin-bottom, 0px) + 10px);
+}
+@media (max-width: 1000px) {
+  html,
+  body {
+    overflow-anchor: none;
+  }
+}
+/* Too short to pin anything (phone on its side, on-screen keyboard): everything scrolls, buttons under the board. */
+@media (max-width: 1000px) and (max-height: 560px) {
+  .review .board-col > .board-stick {
+    position: static;
+  }
+  .review .board-col > .navbar {
+    position: static;
+    order: 3;
+    width: var(--col);
+    box-shadow: none;
+    padding: 0 0 0 26px;
+    margin-bottom: 0;
+  }
+  .review .board-col > #player-bottom {
+    order: 2;
+  }
 }
 @media (max-width: 560px) {
+  /* Phone header in two rows: mark and sections, then the game picker and Import. */
+  .topbar {
+    gap: 8px 10px;
+    padding-block: 8px 10px;
+  }
+  .brand {
+    margin-right: 0;
+  }
+  .brand-name,
   .brand-sub {
     display: none;
+  }
+  .tabs {
+    flex: 1;
+  }
+  .tab {
+    flex: 1;
+    justify-content: center;
+    padding: 7px 8px;
+  }
+  .top-actions {
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+  .top-actions #btn-library {
+    flex: 1;
+    justify-content: space-between;
+  }
+  .btn .label-ellipsis {
+    max-width: none;
+  }
+  .review .toggles {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-left: 0;
+  }
+  .review .toggles .tog {
+    flex: none;
   }
 }
 .board-row {
@@ -361,6 +493,15 @@ select {
   overflow: hidden;
   position: relative;
   background: var(--bar-b);
+}
+/* An outline, so Black's half does not melt into a dark page. */
+.evalbar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 30%, transparent);
+  pointer-events: none;
 }
 .evalbar .fill {
   position: absolute;
@@ -1585,6 +1726,8 @@ button.fig:focus-visible {
 .stat-col .sc-r {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
   color: var(--ink-2);
 }
 .stat-col .sc-r b {
@@ -1817,6 +1960,45 @@ button.fig:focus-visible {
 }
 .trow.pic {
   grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+}
+@media (max-width: 560px) {
+  /* Board on the left; title, theme and status stacked beside it, so no title is cut to a few letters. */
+  .trow.pic {
+    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-template-areas: 'pic dot tt' 'pic . tm' 'pic . ts';
+    gap: 1px 10px;
+    align-items: start;
+    align-content: center;
+  }
+  .trow.pic > .mb {
+    grid-area: pic;
+    align-self: center;
+  }
+  .trow.pic > .tdot {
+    grid-area: dot;
+    margin-top: 5px;
+  }
+  .trow.pic > .tt {
+    grid-area: tt;
+    white-space: normal;
+  }
+  .trow.pic > .tm {
+    grid-area: tm;
+  }
+  .trow.pic > .ts {
+    grid-area: ts;
+  }
+  .lib-item {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .lib-item .li-sub {
+    white-space: normal;
+  }
+  .lib-item .li-act {
+    grid-column: 2;
+    justify-content: flex-start;
+    gap: 10px;
+  }
 }
 .trow:last-child {
   border-bottom: 0;
@@ -2437,4 +2619,43 @@ dialog::backdrop {
 .glyph[class*='k-'],
 .g[class*='k-'] {
   color: var(--kc);
+}
+
+/* ---------- touch: nothing you tap is smaller than a fingertip ---------- */
+@media (pointer: coarse) {
+  .btn.small,
+  .tog,
+  .sugg,
+  .seg button {
+    min-height: 36px;
+  }
+  .btn.small {
+    padding-inline: 12px;
+  }
+  .sugg {
+    padding: 6px 12px;
+  }
+  .switch {
+    min-height: 36px;
+  }
+  .switch input {
+    width: 20px;
+    height: 20px;
+  }
+  .movelist .mvc {
+    padding-block: 8px;
+  }
+  .msg.user .at {
+    padding-block: 7px 3px;
+    margin-top: -7px;
+  }
+  /* Move links keep their look; an invisible margin around each makes them easier to hit. */
+  .mv {
+    position: relative;
+  }
+  .mv::after {
+    content: '';
+    position: absolute;
+    inset: -7px -3px;
+  }
 }

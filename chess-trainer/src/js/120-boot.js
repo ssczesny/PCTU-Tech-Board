@@ -50,10 +50,7 @@ function bindUI() {
   $('#nav-prev').addEventListener('click', stepBack);
   $('#nav-next').addEventListener('click', stepForward);
   $('#nav-last').addEventListener('click', () => go(App.game.plies.length));
-  $('#nav-flip').addEventListener('click', () => {
-    App.view.orient = other(App.view.orient);
-    updateReview();
-  });
+  $('#nav-flip').addEventListener('click', flipBoard);
   $('#tog-best').addEventListener('click', () => {
     App.view.showBest = !App.view.showBest;
     renderDecor();
@@ -190,6 +187,20 @@ function bindUI() {
     }),
   );
   bindMoveLinks();
+  // Narrow, tall screens pin the board to the top and the step buttons to the bottom (see the styles). Their
+  // sizes feed scroll-padding, so nothing that is scrolled into view ends up hidden behind them.
+  if (window.ResizeObserver && window.matchMedia) {
+    const stick = $('#board-stick'),
+      root = document.documentElement;
+    const pinned = window.matchMedia('(max-width: 1000px) and (min-height: 561px)');
+    const setPins = () => {
+      const h = pinned.matches ? Math.round(stick.getBoundingClientRect().height) : 0;
+      root.style.setProperty('--pin-top', h + 'px');
+      root.style.setProperty('--pin-bottom', (h ? Math.round($('#navbar').getBoundingClientRect().height) : 0) + 'px');
+    };
+    new ResizeObserver(setPins).observe(stick);
+    pinned.addEventListener('change', setPins);
+  }
   for (const type of ['pointerdown', 'keydown', 'wheel'])
     document.addEventListener(
       type,
@@ -198,16 +209,17 @@ function bindUI() {
       },
       { capture: true, passive: true },
     );
-  for (const type of ['wheel', 'touchmove']) $('#coach-scroll').addEventListener(type, () => (ChatPin.on = false), { passive: true });
+  for (const type of ['wheel', 'touchmove']) document.addEventListener(type, () => (ChatPin.on = false), { passive: true });
   $('#coach-scroll').addEventListener('scroll', () => (Nav.scrolled = true), { passive: true });
   // Stepping keys work from anywhere in Review except while typing or with a dialog open. Buttons, checkboxes
   // and links keep focus without swallowing the arrows.
-  const typing = t => {
+  const inField = t => {
     if (!t || !t.closest) return false;
-    if (t.id === 'chat-input' && !t.value) return false; // an empty question box has nothing for the arrows to do
     if (t.closest('textarea, select, [contenteditable]')) return true;
     return t.matches('input') && !/^(checkbox|radio|button|submit|range)$/i.test(t.type);
   };
+  // An empty question box has nothing for the arrows to do, so they still step from there.
+  const typing = t => inField(t) && !(t.id === 'chat-input' && !t.value);
   document.addEventListener('keydown', e => {
     if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || App.tab !== 'review' || !App.game) return;
     if (typing(e.target) || document.querySelector('dialog[open]')) return;
@@ -223,11 +235,18 @@ function bindUI() {
     } else if (e.key === 'End') {
       e.preventDefault();
       go(App.game.plies.length);
-    } else if ((e.key === 'f' || e.key === 'F') && !e.shiftKey) {
-      App.view.orient = other(App.view.orient);
-      updateReview();
+    } else if ((e.key === 'f' || e.key === 'F') && !e.shiftKey && !inField(e.target)) {
+      flipBoard();
     }
   });
+}
+/* Turn the board round, and with it every small board on screen (card, chat answers, key moments). */
+function flipBoard() {
+  if (!App.game) return;
+  App.view.orient = other(App.view.orient);
+  updateReview();
+  renderChat();
+  renderSummary();
 }
 async function boot() {
   if (!window.Chess) {

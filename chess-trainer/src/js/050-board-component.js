@@ -22,7 +22,8 @@ function createBoard(root, opts = {}) {
     selected = null,
     drag = null,
     interactive = false,
-    lastFen = null;
+    lastFen = null,
+    promoDone = null;
   const xy = sq => {
     const f = FILES.indexOf(sq[0]),
       r = +sq[1] - 1;
@@ -53,6 +54,17 @@ function createBoard(root, opts = {}) {
   /* animate=false snaps: pieces jump with no transition (held arrow key, long jumps). */
   function setPosition(fen, animate = true) {
     if (fen === lastFen && pieces.size) return;
+    // The position is changing under the student's hand: let go of a held piece and close the promotion
+    // picker first, so nothing is dropped back onto a square that now belongs to another position.
+    if (drag) {
+      drag.el.classList.remove('drag');
+      place(drag.el, drag.from);
+      try {
+        root.releasePointerCapture(drag.id);
+      } catch {}
+      drag = null;
+    }
+    if (promoDone) promoDone(null);
     lastFen = fen;
     dests = null;
     root.classList.toggle('snap', !animate);
@@ -174,7 +186,7 @@ function createBoard(root, opts = {}) {
     if (p && p.code[1] === 'P' && (to[1] === '8' || to[1] === '1')) {
       pr = await askPromo(p.code[0], to);
       if (!pr) {
-        place(p.el, from);
+        if (pieces.get(from) === p) place(p.el, from);
         drawMarks();
         return;
       }
@@ -199,9 +211,11 @@ function createBoard(root, opts = {}) {
       promo.style.bottom = y >= 4 ? (7 - y) * 12.5 + '%' : '';
       const done = v => {
         promo.hidden = true;
+        promoDone = null;
         document.removeEventListener('pointerdown', outside, true);
         res(v);
       };
+      promoDone = done;
       const outside = e => {
         if (!promo.contains(e.target)) done(null);
       };

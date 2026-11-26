@@ -24,6 +24,7 @@ function autoAllowed(g, k) {
     App.consented &&
     App.profile.settings.autoCoach &&
     !g.explanations[k] &&
+    !(g.autoOff && g.autoOff.has(k)) &&
     performance.now() >= App.autoPausedUntil
   );
 }
@@ -61,6 +62,7 @@ async function explainMove(k, { force = false, auto = false } = {}) {
   await Promise.all([Analyzer.want(k - 1), Analyzer.want(k)]);
   if (job.ctl.signal.aborted) {
     job.status = 'cancelled';
+    if (job.stopped) noAuto(g, k);
     paintJob(job, true);
     scheduleAutoExplain();
     return;
@@ -89,12 +91,24 @@ async function explainMove(k, { force = false, auto = false } = {}) {
     job.status = e && e.code === 'cancelled' ? 'cancelled' : 'error';
     job.error = e;
     if (e && OFF_CODES.has(e.code)) App.sampleOff = e.code;
-    // After a usage limit, automatic explanations pause for two minutes; a click still asks.
-    if (e && e.code === 'rate_limited') App.autoPausedUntil = performance.now() + 120000;
+    // A call that failed, or that the student stopped, is never repeated on its own for that move: only a
+    // click asks again. After any failure automatic explanations also pause everywhere for a while (two
+    // minutes after a usage limit), so stepping on does not send one doomed call per move.
+    if (job.status === 'error') {
+      noAuto(g, k);
+      App.autoPausedUntil = performance.now() + (e && e.code === 'rate_limited' ? 120000 : 45000);
+    } else if (job.stopped) noAuto(g, k);
     job.text = e && e.text && e.code !== 'refused' ? e.text : '';
   }
   paintJob(job, true);
   scheduleAutoExplain();
+}
+function noAuto(g, k) {
+  (g.autoOff || (g.autoOff = new Set())).add(k);
+}
+function stopJob(job) {
+  job.stopped = true;
+  job.ctl.abort();
 }
 /* Paint a running explanation into the card, but only if the card is showing that move right now. */
 function paintJob(job, full) {
@@ -110,9 +124,7 @@ function paintJob(job, full) {
     box.innerHTML = md(job.text);
     linkMoves(box, moveBases(job.g, job.k), { figs: false });
   } else
-    box.replaceChildren(
-      thinkingEl(job.phase === 'engine' ? 'Waiting for the engine…' : 'The coach is looking at the position…', () => job.ctl.abort()),
-    );
+    box.replaceChildren(thinkingEl(job.phase === 'engine' ? 'Waiting for the engine…' : 'The coach is looking at the position…', () => stopJob(job)));
 }
 function thinkingEl(text, onStop) {
   return el(
@@ -125,9 +137,18 @@ function thinkingEl(text, onStop) {
 }
 /* Positions the notation in an explanation of move k can refer to: after the move first, then before it. */
 function moveBases(g, k) {
+  // Written without a move number, the move being explained and the engine's pick are the mover's moves,
+  // even when the other side could play the same notation next.
+  const bare = s => s.replace(/[+#]/g, '');
+  const own = new Set([bare(g.plies[k - 1].san)]);
+  const a = g.pos[k - 1];
+  if (a && a.b) {
+    const best = lineSteps(g.fens[k - 1], a.p || a.b, 1)[0];
+    if (best) own.add(bare(best.san));
+  }
   return [
     { fen: g.fens[k], ply: k, pre: [] },
-    { fen: g.fens[k - 1], ply: k - 1, pre: [] },
+    { fen: g.fens[k - 1], ply: k - 1, pre: [], own },
   ];
 }
 
@@ -256,7 +277,6 @@ function renderCoachBody() {
   if (!g) return;
   ensureCard();
   const body = $('#cc-body');
-  Nav.dirty = false;
   body.classList.remove('stale');
   const kids = [];
   if (v.explore) {
@@ -335,10 +355,10 @@ function renderCoachBody() {
     if (job.text) {
       text.innerHTML = md(job.text);
       linkMoves(text, moveBases(g, k), { figs: false });
-    } else
-      text.append(thinkingEl(job.phase === 'engine' ? 'Waiting for the engine…' : 'The coach is looking at the position…', () => job.ctl.abort()));
+    } else text.append(thinkingEl(job.phase === 'engine' ? 'Waiting for the engine…' : 'The coach is looking at the position…', () => stopJob(job)));
   } else if (saved) {
     text.innerHTML = explanationHTML(g, k, saved.t, figs.seen);
+    if (job && job.status === 'error') text.append(el('p', { class: 'note warn', text: sampleErrorText(job.error) }));
     actions.append(el('button', { class: 'btn small', onclick: () => explainMove(k, { force: true }), text: 'Explain again' }));
   } else if (!App.sample || App.sampleOff) {
     text.append(
