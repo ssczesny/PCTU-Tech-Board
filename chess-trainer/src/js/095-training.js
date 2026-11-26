@@ -105,23 +105,73 @@ function gameItem(d) {
     rating: null,
   };
 }
+/* A game graded before drill summaries were saved has to be replayed once to find its mistakes. The result is
+   written back, so it is paid once and not on every visit. */
+function ensureDrills(rec, quiet) {
+  if (rec.stats && Array.isArray(rec.stats.drills)) return rec.stats.drills;
+  let list = [];
+  try {
+    list = drillsOf(buildRuntime(rec));
+  } catch {}
+  if (!rec.stats) return list;
+  rec.stats.drills = list;
+  if (!quiet && !rec.example) Store.patchGame(rec.id, { stats: rec.stats }).catch(() => {});
+  return list;
+}
+/* After loading the library: do that replaying a game at a time while the browser is idle, so opening Train
+   never has to do all of it at once. The lists are saved afterwards, one game at a time. */
+let backfilling = false;
+const drillSaves = [];
+let drillSaving = false;
+async function saveDrillLists() {
+  if (drillSaving) return;
+  drillSaving = true;
+  while (drillSaves.length) {
+    const rec = drillSaves.shift();
+    if (!App.library.includes(rec)) continue;
+    try {
+      await Store.patchGame(rec.id, { stats: rec.stats });
+    } catch {
+      drillSaves.length = 0; // storage is refusing writes; the lists stay in memory for this visit
+    }
+  }
+  drillSaving = false;
+}
+async function backfillDrills() {
+  if (backfilling) return;
+  const todo = App.library.filter(r => r.analysis && r.analysis.complete && r.stats && !Array.isArray(r.stats.drills) && !r.broken);
+  if (!todo.length) return;
+  backfilling = true;
+  while (todo.length) {
+    await new Promise(res => whenIdle(res));
+    const t0 = performance.now();
+    while (todo.length && performance.now() - t0 < 10) {
+      const rec = todo.pop();
+      if (!App.library.includes(rec) || Array.isArray(rec.stats.drills)) continue;
+      ensureDrills(rec, true);
+      drillSaves.push(rec);
+    }
+    saveDrillLists();
+  }
+  backfilling = false;
+  refreshDrillCount();
+  if (App.tab === 'drills' && !Train.ex) renderTrain();
+}
 function collectDrills() {
   const out = [];
+  const t0 = performance.now();
+  let later = false;
   const recs = App.library.length ? App.library : [App.exampleRec];
   for (const rec of recs) {
     if (!rec || !rec.analysis || !rec.analysis.complete || rec.broken) continue;
-    let list = rec.stats && rec.stats.drills;
-    if (!Array.isArray(list)) {
-      // Graded before drill summaries were saved: read the game once and remember the result.
-      try {
-        list = drillsOf(runtimeFor(rec));
-      } catch {
-        list = [];
-      }
-      if (rec.stats) rec.stats.drills = list;
+    if (!(rec.stats && Array.isArray(rec.stats.drills)) && (backfilling || performance.now() - t0 > 40)) {
+      later = true; // a big older library: the background pass fills these in and Train redraws itself
+      continue;
     }
+    const list = ensureDrills(rec);
     for (const d of list) out.push({ rec, k: d.k, kind: d.kind, drop: d.drop, fen: d.fen, san: d.san, last: d.last, best: d.best });
   }
+  if (later) backfillDrills();
   return out.sort((a, b) => b.drop - a.drop);
 }
 function allItems() {

@@ -305,6 +305,8 @@ async function boot() {
     openGame(latest.id);
   } else setGame(App.game);
   refreshDrillCount();
+  backfillDrills();
+  if (Store.full) toast('This browser is out of storage space, so new changes are not being saved. Delete a few games to make room.', 7000);
   // Handles for the test suite.
   window.__pm = App;
   window.__pmTrain = Train;

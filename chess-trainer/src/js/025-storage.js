@@ -2,12 +2,14 @@
 /* Games and the profile live in the viewer's private area of the artifact database when it is available
    ("cloud"), otherwise in this browser's storage ("local"), otherwise only in memory.
    Local layout: one key per game, so saving an explanation rewrites that game and not the whole library:
-     postmortem.v2.profile   postmortem.v2.ids (list of game ids)   postmortem.v2.g.<id> */
+     postmortem.v2.profile   postmortem.v2.g.<id>
+   The library is whatever game keys exist. There is no separate index that a second tab could overwrite,
+   and a browser that is out of space can still read what it saved earlier. */
 const LS2 = 'postmortem.v2.';
 const Store = {
   mode: 'memory',
   mem: { profile: null, games: {} },
-  warned: false,
+  full: false, // the last local write failed for lack of space
   async init() {
     const c = window.claude;
     if (c && typeof c.use === 'function') {
@@ -24,45 +26,61 @@ const Store = {
         console.warn('storage init', e);
       }
     }
-    try {
-      localStorage.setItem(LS2 + 'probe', '1');
-      localStorage.removeItem(LS2 + 'probe');
-      this.mode = 'local';
-      const ids = JSON.parse(localStorage.getItem(LS2 + 'ids') || 'null');
-      if (Array.isArray(ids)) {
-        this.mem.profile = JSON.parse(localStorage.getItem(LS2 + 'profile') || 'null');
-        for (const id of ids) {
-          try {
-            const g = JSON.parse(localStorage.getItem(LS2 + 'g.' + id) || 'null');
-            if (g && g.id) this.mem.games[g.id] = g;
-          } catch {}
-        }
-      } else {
-        // First run on this layout: carry over a library saved by the earlier single-key version.
-        const old = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
-        if (old && typeof old === 'object') {
-          this.mem = { profile: old.profile || null, games: old.games || {} };
-          this._put('profile', this.mem.profile);
-          for (const id of Object.keys(this.mem.games)) this._put('g.' + id, this.mem.games[id]);
-          this._ids();
-          if (!this.warned) localStorage.removeItem(LS_KEY);
-        }
+    // Being able to read is what makes this "local": a full disk only stops new saves (see _put).
+    const read = key => {
+      try {
+        return JSON.parse(localStorage.getItem(key) || 'null');
+      } catch {
+        return null;
       }
+    };
+    const keys = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
     } catch {
-      if (this.mode !== 'local') this.mode = 'memory';
+      this.mode = 'memory';
+      return;
+    }
+    this.mode = 'local';
+    this.mem.profile = read(LS2 + 'profile');
+    for (const key of keys) {
+      if (!key || !key.startsWith(LS2 + 'g.')) continue;
+      const g = read(key);
+      if (g && g.id && g.pgn) this.mem.games[g.id] = g;
+    }
+    try {
+      localStorage.removeItem(LS2 + 'ids'); // index kept by an earlier build
+    } catch {}
+    // A library saved by the first, single-key version is carried over once.
+    const old = read(LS_KEY);
+    if (old && typeof old === 'object') {
+      if (!this.mem.profile && old.profile) this.mem.profile = old.profile;
+      const missing = Object.keys(old.games || {}).filter(id => !this.mem.games[id]);
+      for (const id of missing) this.mem.games[id] = old.games[id];
+      let ok = this._put('profile', this.mem.profile);
+      for (const id of missing) ok = this._put('g.' + id, this.mem.games[id]) && ok;
+      try {
+        localStorage.removeItem(LS_KEY);
+      } catch {}
+      if (!ok) {
+        // There was no room for both copies. With the old one gone (everything is in memory) write again.
+        this._put('profile', this.mem.profile);
+        for (const id of Object.keys(this.mem.games)) this._put('g.' + id, this.mem.games[id]);
+      }
     }
   },
+  /* Returns false when the browser refused the write (out of space). Callers turn that into an error the
+     student sees: nothing is ever dropped quietly. */
   _put(key, value) {
-    if (this.mode !== 'local') return;
+    if (this.mode !== 'local') return true;
     try {
       localStorage.setItem(LS2 + key, JSON.stringify(value));
+      this.full = false;
+      return true;
     } catch {
-      if (!this.warned) toast('This browser is out of storage space. Delete a few games from your library to keep saving.');
-      this.warned = true;
+      this.full = true;
+      return false;
     }
-  },
-  _ids() {
-    this._put('ids', Object.keys(this.mem.games));
   },
   async loadProfile() {
     if (this.mode === 'cloud') {
@@ -76,7 +94,7 @@ const Store = {
       if (this.mode === 'cloud') await this.profileRef.set(clone(p));
       else {
         this.mem.profile = clone(p);
-        this._put('profile', this.mem.profile);
+        if (!this._put('profile', this.mem.profile)) throw { code: 'local_full' };
       }
     });
   },
@@ -91,10 +109,8 @@ const Store = {
     return serial(rec.id, async () => {
       if (this.mode === 'cloud') await this.gamesRef.doc(rec.id).set(clone(rec));
       else {
-        const isNew = !this.mem.games[rec.id];
         this.mem.games[rec.id] = clone(rec);
-        this._put('g.' + rec.id, this.mem.games[rec.id]);
-        if (isNew) this._ids();
+        if (!this._put('g.' + rec.id, this.mem.games[rec.id])) throw { code: 'local_full' };
       }
     });
   },
@@ -105,7 +121,7 @@ const Store = {
         const g = this.mem.games[id];
         if (g) {
           deepMerge(g, clone(patch));
-          this._put('g.' + id, g);
+          if (!this._put('g.' + id, g)) throw { code: 'local_full' };
         }
       }
     });
@@ -119,14 +135,15 @@ const Store = {
           try {
             localStorage.removeItem(LS2 + 'g.' + id);
           } catch {}
-        this._ids();
       }
     });
   },
 };
 function storeError(e) {
   const code = e && e.code;
-  if (code === 'quota_exceeded') toast('Your saved library is full. Delete some older games to keep saving.');
+  if (code === 'local_full')
+    toast('This browser is out of storage space, so that change was not saved. Delete a few games from your library to make room.', 7000);
+  else if (code === 'quota_exceeded') toast('Your saved library is full. Delete some older games to keep saving.');
   else if (code === 'invalid_argument') toast('This view can’t save to your library, so changes stay in this tab.');
   else toast('Couldn’t save that change. It will be kept while this tab is open.');
 }

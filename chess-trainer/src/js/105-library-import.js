@@ -106,7 +106,13 @@ async function deleteGame(id) {
   if (App.game && App.game.id === id) {
     if (App.library.length) openGame(App.library[0].id);
     else openExample();
+  } else if (Analyzer.game && Analyzer.game.id === id) {
+    // It was being graded in the background: stop, and let the next waiting game have the engine.
+    Analyzer.token++;
+    Analyzer.game = App.game;
+    continueBackground();
   }
+  renderStatus();
   renderLibrary();
   refreshDrillCount();
   updateTitle();
@@ -126,7 +132,9 @@ function renderSettings() {
     Store.mode === 'cloud'
       ? 'Your games are saved to your Claude account and only you can see them.'
       : Store.mode === 'local'
-        ? 'Your games are saved in this browser only.'
+        ? Store.full
+          ? 'This browser is out of storage space, so new changes are not being saved. Delete a few games to make room.'
+          : 'Your games are saved in this browser only.'
         : 'Saving isn’t available here, so games last until you close this tab.';
 }
 async function importPGN() {
@@ -197,10 +205,28 @@ async function importPGN() {
     }
   }
   goBtn.disabled = false;
+  const saves = [];
   for (const rec of added) {
     App.library.push(rec);
-    Store.putGame(rec).catch(storeError);
+    saves.push(
+      Store.putGame(rec).then(
+        () => null,
+        e => e || {},
+      ),
+    );
   }
+  // Told plainly if any of them could not be stored (the dialog may already have closed, so also as a toast).
+  Promise.all(saves).then(rs => {
+    const failed = rs.filter(Boolean);
+    if (!failed.length) return;
+    const noRoom = failed.some(e => e.code === 'local_full' || e.code === 'quota_exceeded');
+    const text = `${failed.length === added.length ? (added.length === 1 ? 'This game was' : 'These games were') : failed.length + ' of these games were'} not saved${
+      noRoom ? ' because your library is out of space' : ''
+    }, so ${failed.length === 1 ? 'it' : 'they'} will be gone when you close this tab. Delete some older games, then import again.`;
+    out.textContent = (out.textContent + ' ' + text).trim();
+    out.classList.add('err');
+    toast(text, 9000);
+  });
   const msg = [];
   if (added.length) msg.push(`Imported ${added.length} game${added.length === 1 ? '' : 's'}.`);
   if (dupes) msg.push(`${dupes} already in your library.`);
